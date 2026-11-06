@@ -2,20 +2,40 @@
 
 Public site: **https://dlduong.github.io/**
 
-A static, responsive academic homepage. It uses HTML and CSS with no framework, package dependencies, analytics, external fonts, or JavaScript on the homepage. The MCMC tutorial is preserved from the original `dlduong/personalsite` repository, including its standalone interactive lab and Python examples.
+A simple, static academic website with a homepage and separate publications page. It uses HTML and CSS with no framework, package dependencies, analytics, external fonts, or JavaScript on the homepage. The MCMC tutorial is preserved from the original `dlduong/personalsite` repository, including its standalone interactive lab and Python examples.
 
 ## Updating the site
 
 Edit `index.html` directly on GitHub (pencil icon), then commit to `main`. GitHub Pages automatically publishes changes, usually within a few minutes.
 
-- **Biography, affiliation and contact:** the `about` and `contact` sections in `index.html`. Keep the description and Person structured data in the document head consistent.
-- **Publications:** add or edit an `<li>` within `publication-list`. Each entry includes year, status, title, authors, venue, a short description, and links. The homepage intentionally shows selected work; Google Scholar links to the broader record.
+- **Biography and research:** edit the main content in `index.html`. Keep the description and Person structured data in the document head consistent.
+- **Affiliation, contact and profile links:** edit the shared profile sidebar in both `index.html` and `publications.html`.
+- **Publications:** edit `publications.html`. Add an `<li>` under the appropriate year. Preserve titles, author order, venue, publication status, and paper links. The list is selected work; Google Scholar links to the broader record.
 - **Portrait:** replace `assets/portrait.jpg`. Update the image description if needed.
-- **Design:** edit `assets/style.css`. Color and font settings are at the top.
+- **Design:** edit `assets/basic.css`. Color and font settings are at the top.
 - **New resources:** add files or a folder and link to them from the Resources section. Add substantial pages to `sitemap.xml`.
-- **CV:** when a current PDF is available, add `assets/duc-lam-duong-cv.pdf` and a link in the profile strip. No placeholder CV is published.
+- **CV:** when a current PDF is available, add `assets/duc-lam-duong-cv.pdf` and a link in the profile sidebar on both pages. No placeholder CV is published.
 
 The homepage works without JavaScript and is usable offline with its local assets. The tutorial uses its own JavaScript. Navigation, publication links, email, and downloads are native HTML links. External scholarly sites may impose their own access restrictions.
+
+## Design versions and restoring the original
+
+The simpler academic design is live at the root address. The original design is preserved, with the dots after the name removed:
+
+- Browse: https://dlduong.github.io/versions/original/
+- Snapshot: Git tag `design-original` (commit `3b719f1`).
+- Archived files: `versions/original/index.html` and `versions/original/style.css`. The archive uses shared portrait and favicon assets and is excluded from indexing. The exact snapshot is also retained by the Git tag.
+
+To restore the original design at the homepage, run from a checkout of **dlduong/dlduong.github.io**:
+
+```sh
+git restore --source=design-original -- index.html 404.html
+git add index.html 404.html
+git commit -m "Restore original homepage design"
+git push origin main
+```
+
+This restores the original homepage without deleting resources or rewriting history. Both stylesheets are retained independently (`assets/style.css` for the original and `assets/basic.css` for the simpler design), so the separate publications page remains usable.
 
 ## Hosting
 
