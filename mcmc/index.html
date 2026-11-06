@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Prepared for a researcher in Bayesian inverse problems" />
+  <meta name="dcterms.date" content="2026-11-05" />
+  <title>A 90-minute crash course on MCMC</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+@page { size: A4; margin: 18mm 19mm 19mm; }
+body { font-family: "DejaVu Serif", serif; font-size: 10.5pt; line-height: 1.34; color:#172b36; max-width: 100%; }
+h1,h2,h3 { font-family: "DejaVu Sans", sans-serif; color:#185a78; line-height:1.2; break-after:avoid; }
+h1 { font-size:18pt; margin-top:1.1em; }
+h2 { font-size:13pt; margin-top:1.0em; }
+h3 { font-size:11pt; }
+p { margin:0.6em 0; orphans:3; widows:3; }
+a { color:#185a78; text-decoration:none; }
+header { text-align:left; border-bottom:3px solid #185a78; margin-bottom:1.5em; }
+header h1.title { font-size:27pt; margin:0.3em 0; }
+.subtitle {font-size:15pt; color:#456372;}
+.author,.date {font-family:"DejaVu Sans",sans-serif; font-size:9.5pt;}
+table {width:100%; border-collapse:collapse; font-size:9pt; margin:1em 0; break-inside:avoid;}
+th {background:#e9f2f6; text-align:left;}
+th,td {padding:0.4em 0.5em; border-bottom:1px solid #c3d3dc; vertical-align:top;}
+pre {font-family:"DejaVu Sans Mono",monospace; font-size:7.9pt; line-height:1.33; border:1px solid #c3d3dc; padding:10px; background:#f6f8fa; white-space:pre-wrap; overflow-wrap:anywhere; }
+code {font-size:0.92em;}
+figure {margin:1em 0; break-inside:avoid; text-align:center;}
+img {max-width:100%; max-height:205mm; object-fit:contain;}
+figcaption {font-size:9pt; color:#456372; text-align:left;}
+math {font-family:"DejaVu Math TeX Gyre","Latin Modern Math",math; font-size:1.0em;}
+math[display="block"] { margin:0.9em 0; break-inside:avoid; }
+section#a-one-page-summary {break-before:page; break-after:page; font-size:10pt; line-height:1.23;}
+section#a-one-page-summary h1 {font-size:18pt; margin-top:0;}
+section#concept-map {break-before:page;}
+section#concept-map img {max-height:180mm; max-width:92%;}
+section#five-exercises-of-increasing-difficulty {break-before:page;}
+</style>
+<style>
+html{scroll-behavior:smooth}body{max-width:1000px;margin:0 auto;padding:28px;background:#faf9f5;color:#20343a;font-size:17px;line-height:1.65}header{padding:40px 0}h1,h2{scroll-margin-top:65px}nav{position:sticky;top:0;z-index:5;background:#123e49;padding:10px;border-radius:8px;display:flex;flex-wrap:wrap;gap:14px}nav a{color:white;font:14px sans-serif}section{margin-bottom:28px}button,select,input{font:inherit}button{background:#146879;color:white;border:0;padding:9px 15px;border-radius:6px;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid #ef9b48}label{display:inline-block;margin:8px 14px 8px 0}.lab{background:white;padding:22px;border:1px solid #bdd0d4;border-radius:12px;box-shadow:0 7px 20px #163c4410;margin:30px 0}canvas{width:100%;height:auto;background:#f3f7f8;border-radius:8px}output{display:block;background:#e5f1ef;padding:12px;margin:12px 0;font:15px monospace}details{padding:14px;background:#edf2ef;margin:14px 0;border-radius:8px}summary{cursor:pointer;font-weight:bold}pre{overflow:auto}math[display=block]{overflow-x:auto;max-width:100%}.muted{font-size:14px;color:#526c75}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}@media(max-width:600px){body{padding:12px;font-size:16px}header h1.title{font-size:29px}table{display:block;overflow:auto}nav{position:relative}.lab{padding:12px}}@media print{nav,.lab{display:none}body{padding:0;background:white}}
+</style></head>
+<body>
+<header id="title-block-header">
+<h1 class="title">A 90-minute crash course on MCMC</h1>
+<p class="subtitle">From Bayesian posterior expectations to reliable
+computation</p>
+<p class="author">Prepared for a researcher in Bayesian inverse
+problems</p>
+<p class="date">5 November 2026</p>
+<p class="muted">Interactive edition of the MCMC crash course prepared with Duc-Lam Duong, November 2026. Full explanations, numerical examples, and Python source accompany the live experiments. Your simulations run locally in this browser.</p></header><nav aria-label="Course navigation"><a href="#sampling-lab">Sampling lab</a><a href="#chain-lab">Markov chains</a><a href="#part-1-monte-carlo-foundations-0-15-minutes">Start course</a><a href="#a-one-page-summary">Summary</a><a href="#five-exercises-of-increasing-difficulty">Exercises</a><a href="mcmc_examples.py" download>Python source</a></nav>
+<section id="sampling-lab" class="lab"><p class="muted">EXPERIMENT • CHANGE A PARAMETER, THEN RUN</p><h2>Watch a posterior become a sample</h2><p>Target: Normal(1.6, 0.2), with variance 0.2. Compare a random walk with Hamiltonian proposals. Every rejected proposal remains in the trace.</p><div class="controls"><label>Algorithm <select id="method"><option value="rw">Random-walk Metropolis</option><option value="hmc">Fixed-length HMC</option></select></label><label>Step size <input id="scale" type="range" min="0.02" max="3" step="0.02" value="0.6"><span id="scaleLabel">0.60</span></label><label>HMC steps <input id="steps" type="number" min="1" max="50" value="8" style="width:65px"></label><label>Start x <input id="start" type="number" value="0" step="0.1" style="width:70px"></label><button id="one">One step</button><button id="run">Run 1,000</button><button id="reset">Reset</button></div><output id="stats" aria-live="polite"></output><canvas id="trace" width="900" height="230" aria-label="Chain trace; horizontal axis iteration, vertical axis sampled value"></canvas><canvas id="hist" width="900" height="230" aria-label="Sample histogram compared with the exact posterior density"></canvas><p class="muted">Blue: retained states. Orange: exact posterior density. This single-chain teaching run includes initialization and has no automatic warmup. The displayed mean is provisional; compare multiple chains and diagnose convergence before research use. HMC here uses a fixed trajectory length, not NUTS.</p></section>
+<section id="chain-lab" class="lab"><h2>From transitions to equilibrium</h2><p>P(0 → 1) = 0.2 and P(1 → 0) = 0.1. Start with all probability at state 0 and watch the distribution approach (1/3, 2/3).</p><button id="transition">Apply one transition</button> <button id="chainReset">Reset distribution</button><output id="chainStats" aria-live="polite"></output><canvas id="bars" width="900" height="160" aria-label="Probabilities of states zero and one"></canvas></section>
+<section id="how-to-use-this-course" class="level1">
+<h1>How to use this course</h1>
+<p>The central task is to compute a posterior expectation</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><msub><mi>𝔼</mi><mi>π</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mo>∫</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>d</mi><mi>x</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">I=\mathbb E_\pi[f(X)]=\int f(x)\pi(x)\,dx,</annotation></semantics></math></p>
+<p>when the posterior density is available only up to a normalizing
+constant. MCMC constructs a stochastic process whose long-run occupation
+frequencies represent that posterior. We then use time averages to
+approximate the integral.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Minutes</th>
+<th>Topic</th>
+<th>Main question</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0-15</td>
+<td>Monte Carlo foundations</td>
+<td>Why use random samples for integration?</td>
+</tr>
+<tr class="even">
+<td>15-30</td>
+<td>Markov chains</td>
+<td>When do dependent samples represent a target?</td>
+</tr>
+<tr class="odd">
+<td>30-52</td>
+<td>MCMC algorithms and first implementation</td>
+<td>How do we construct those samples?</td>
+</tr>
+<tr class="even">
+<td>52-70</td>
+<td>Practical MCMC and diagnostics</td>
+<td>How accurate and trustworthy is the result?</td>
+</tr>
+<tr class="odd">
+<td>70-80</td>
+<td>HMC, NUTS, and modern software</td>
+<td>How can geometry improve exploration?</td>
+</tr>
+<tr class="even">
+<td>80-87</td>
+<td>Bayesian inverse problems</td>
+<td>How does the complete inference workflow work?</td>
+</tr>
+<tr class="odd">
+<td>87-90</td>
+<td>Summary and concept map</td>
+<td>How do the pieces fit together?</td>
+</tr>
+</tbody>
+</table>
+<p>Read the explanations, work through the small calculations, and run
+the indicated notebook cells. The five exercises are follow-up work,
+outside the 90 minutes.</p>
+<section id="a-running-bayesian-inverse-problem" class="level2">
+<h2>A running Bayesian inverse problem</h2>
+<p>Take a scalar unknown with a Gaussian prior and a noisy
+observation:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>y</mi><mo>=</mo><mi>X</mi><mo>+</mo><mi>η</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>η</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mn>0.5</mn><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>y</mi><mo>=</mo><mn>2</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">X\sim\mathcal N(0,1),\qquad y=X+\eta,\qquad \eta\sim\mathcal N(0,0.5^2),\qquad y=2.</annotation></semantics></math></p>
+<p>Its posterior is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msup><mi>Z</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>exp</mo><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mfrac><msup><mi>x</mi><mn>2</mn></msup><mn>2</mn></mfrac><mo>−</mo><mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mo>−</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mrow><mn>2</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow></mfrac><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\pi(x)=Z^{-1}\exp\left[-\frac{x^2}{2}-\frac{(2-x)^2}{2(0.5)^2}\right].</annotation></semantics></math></p>
+<p>Completing the square gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>∣</mo><mi>y</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1.6</mn><mo>,</mo><mn>0.2</mn><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">X\mid y\sim\mathcal N(1.6,0.2).</annotation></semantics></math></p>
+<p>Thus the exact posterior mean is 1.6, variance is 0.2, standard
+deviation is about 0.4472, and</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo>&gt;</mo><mn>2</mn><mo>∣</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><mn>0.18555</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">\mathbb P(X&gt;2\mid y)\approx0.18555.</annotation></semantics></math></p>
+<p>We could sample this posterior directly. We deliberately treat it as
+a target known only through its unnormalized log density, so every MCMC
+calculation has a checkable answer. For a nonlinear PDE inverse problem,
+the same structure becomes</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>∣</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∝</mo><mo>exp</mo><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>;</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><msub><mi>π</mi><mn>0</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>;</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mo stretchy="false" form="postfix">∥</mo><msup><mi>Γ</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>−</mo><mi>𝒢</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">\pi(x\mid y)\propto\exp[-\Phi(x;y)]\pi_0(x),\qquad
+\Phi(x;y)=\tfrac12\|\Gamma^{-1/2}(y-\mathcal G(x))\|^2.</annotation></semantics></math></p>
+<p>Evaluating the log density may then require a PDE solve.</p>
+</section>
+</section>
+<section id="part-1-monte-carlo-foundations-0-15-minutes" class="level1">
+<h1>Part 1: Monte Carlo foundations (0-15 minutes)</h1>
+<section id="why-high-dimensional-numerical-integration-is-difficult" class="level2">
+<h2>1.1 Why high-dimensional numerical integration is difficult</h2>
+<p><strong>Intuition.</strong> A tensor grid spends points resolving
+every coordinate combination, including regions that contribute little
+to the integral. Bayesian posteriors may concentrate on a thin, tilted,
+or curved region that the grid barely resolves.</p>
+<p><strong>Mathematics.</strong> A tensor rule with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+nodes in each of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>
+coordinates needs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>m</mi><mi>d</mi></msup><annotation encoding="application/x-tex">m^d</annotation></semantics></math>
+evaluations. For a fixed-order rule with an error estimate proportional
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>h</mi><mi>r</mi></msup><annotation encoding="application/x-tex">h^r</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>≍</mo><msup><mi>h</mi><mrow><mi>−</mi><mi>d</mi></mrow></msup></mrow><annotation encoding="application/x-tex">N\asymp h^{-d}</annotation></semantics></math>,
+this translates to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>N</mi><mrow><mi>−</mi><mi>r</mi><mi>/</mi><mi>d</mi></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(N^{-r/d})</annotation></semantics></math>,
+subject to its regularity assumptions. This is an illustration, not a
+lower bound for every integration method; sparse grids and other
+structure-exploiting methods can do much better on suitable
+problems.</p>
+<p><strong>Numerical example.</strong> With 20 nodes per coordinate,
+dimensions 1, 5, and 10 require 20, 3,200,000, and 10,240,000,000,000
+evaluations. At one millisecond per evaluation, the last case takes
+about 325 years.</p>
+<p><strong>What problem does this solve?</strong> This motivates
+replacing full-domain resolution by evaluations at representative random
+points.</p>
+</section>
+<section id="the-curse-of-dimensionality" class="level2">
+<h2>1.2 The curse of dimensionality</h2>
+<p><strong>Intuition.</strong> Increasing dimension changes both
+computational cost and geometry. Regions that look large along one
+coordinate can occupy a tiny fraction of the full space.</p>
+<p><strong>Mathematics.</strong> A box with side length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+inside the unit cube has relative volume
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>a</mi><mi>d</mi></msup><annotation encoding="application/x-tex">a^d</annotation></semantics></math>.
+If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>I</mi><mi>d</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">X\sim\mathcal N(0,I_d)</annotation></semantics></math>,
+then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mo stretchy="false" form="postfix">∥</mo><mi>X</mi><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup><mo>=</mo><mi>d</mi><mo>,</mo><mspace width="2.0em"></mspace><mo>Var</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo stretchy="false" form="postfix">∥</mo><mi>X</mi><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>2</mn><mi>d</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">\mathbb E\|X\|^2=d,\qquad \operatorname{Var}(\|X\|^2)=2d.</annotation></semantics></math></p>
+<p>For large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>,
+much of the probability lies in a shell with radius near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mi>d</mi></msqrt><annotation encoding="application/x-tex">\sqrt d</annotation></semantics></math>,
+even though the density is maximized at zero. Density height and
+probability mass are different quantities.</p>
+<p><strong>Numerical example.</strong> The central box
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">[</mo><mn>0.25</mn><mo>,</mo><mn>0.75</mn><mo stretchy="true" form="postfix">]</mo></mrow><mn>20</mn></msup><annotation encoding="application/x-tex">[0.25,0.75]^{20}</annotation></semantics></math>
+occupies only
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mi>−</mi><mn>20</mn></mrow></msup><mo>≈</mo><mn>9.54</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>7</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{-20}\approx9.54\times10^{-7}</annotation></semantics></math>
+of the unit cube. For a 100-dimensional standard Gaussian, the typical
+radius is near 10; a sampler that merely finds the mode at zero has not
+explored the distribution.</p>
+<p><strong>What problem does this solve?</strong> We need a sampler to
+explore posterior mass, not just optimize the posterior density.</p>
+</section>
+<section id="monte-carlo-estimation" class="level2">
+<h2>1.3 Monte Carlo estimation</h2>
+<p><strong>Intuition.</strong> If points are drawn from the distribution
+appearing in the integral, their empirical frequencies already supply
+the integration weights.</p>
+<p><strong>Mathematics.</strong> For independent
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>i</mi></msub><mo>∼</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">X_i\sim\pi</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>𝔼</mi><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo>=</mo><mi>I</mi><mo>,</mo><mspace width="2.0em"></mspace><mo>Var</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mrow><msub><mo>Var</mo><mi>π</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mi>N</mi></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">\widehat I_N=\frac1N\sum_{i=1}^N f(X_i),\qquad
+\mathbb E\widehat I_N=I,\qquad
+\operatorname{Var}(\widehat I_N)=\frac{\operatorname{Var}_\pi(f)}{N},</annotation></semantics></math></p>
+<p>where the variance identity assumes a finite second moment. To
+integrate with respect to Lebesgue measure over a bounded region
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>,
+draw uniformly and multiply the sample mean by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">|</mo><mi>D</mi><mo stretchy="true" form="postfix">|</mo></mrow><annotation encoding="application/x-tex">|D|</annotation></semantics></math>.</p>
+<p><strong>Numerical example.</strong> Three hypothetical posterior
+draws, 1.2, 1.7, and 1.9, give a mean estimate of 1.6. Setting
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mn>𝟏</mn><mrow><mo stretchy="false" form="prefix">{</mo><mi>x</mi><mo>&gt;</mo><mn>2</mn><mo stretchy="false" form="postfix">}</mo></mrow></msub></mrow><annotation encoding="application/x-tex">f(x)=\mathbf1_{\{x&gt;2\}}</annotation></semantics></math>
+makes the same average estimate a posterior event probability.</p>
+<p><strong>What problem does this solve?</strong> The final estimator in
+MCMC is also an empirical average. The challenge moves from integration
+to constructing useful samples.</p>
+<p>Monte Carlo is a broader family than independent sampling: dependence
+is allowed when an appropriate law of large numbers holds. MCMC is one
+such construction.</p>
+</section>
+<section id="law-of-large-numbers-and-monte-carlo-error" class="level2">
+<h2>1.4 Law of large numbers and Monte Carlo error</h2>
+<p><strong>Intuition.</strong> More samples stabilize the average. But
+consistency and an error estimate are separate statements.</p>
+<p><strong>Mathematics.</strong> For IID samples and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝔼</mi><mi>π</mi></msub><mrow><mo stretchy="true" form="prefix">|</mo><mi>f</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo>&lt;</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\mathbb E_\pi|f|&lt;\infty</annotation></semantics></math>,
+the strong law gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo>→</mo><mi>I</mi><mspace width="1.0em"></mspace><mtext mathvariant="normal">almost surely</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">\widehat I_N\longrightarrow I\quad\text{almost surely}.</annotation></semantics></math></p>
+<p>With finite variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_f^2</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mi>N</mi></msqrt><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo>−</mo><mi>I</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⇒</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mover><mo>MCSE</mo><mo accent="true">̂</mo></mover><mo>=</mo><msub><mi>s</mi><mi>f</mi></msub><mi>/</mi><msqrt><mi>N</mi></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">\sqrt N(\widehat I_N-I)\Rightarrow\mathcal N(0,\sigma_f^2),\qquad
+\widehat{\operatorname{MCSE}}=s_f/\sqrt N.</annotation></semantics></math></p>
+<p>An approximate 95% Monte Carlo interval for the integral is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo>±</mo><mn>1.96</mn><mo>MCSE</mo></mrow><annotation encoding="application/x-tex">\widehat I_N\pm1.96\operatorname{MCSE}</annotation></semantics></math>.</p>
+<p><strong>Numerical example.</strong> For the running posterior mean,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>10</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">N=10,000</annotation></semantics></math>
+independent draws give MCSE
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mn>0.2</mn><mi>/</mi><mn>10</mn><mo>,</mo><mn>000</mn></mrow></msqrt><mo>≈</mo><mn>0.00447</mn></mrow><annotation encoding="application/x-tex">\sqrt{0.2/10,000}\approx0.00447</annotation></semantics></math>.
+Reducing this to about 0.00224 requires 40,000 draws.</p>
+<p><strong>What problem does this solve?</strong> MCSE quantifies
+numerical uncertainty in an estimated expectation. The posterior
+standard deviation, 0.4472, quantifies uncertainty about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+given the data. The former shrinks with simulation length; the latter
+does not.</p>
+<p>The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>N</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">N^{-1/2}</annotation></semantics></math>
+rate has no explicit dimension exponent. Its variance constant, sampling
+cost, and required accuracy can nevertheless deteriorate with dimension.
+It is not a universal escape from dimensionality.</p>
+</section>
+<section id="importance-sampling" class="level2">
+<h2>1.5 Importance sampling</h2>
+<p><strong>Intuition.</strong> If sampling from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>
+is difficult, sample from a convenient proposal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+and correct the mismatch using weights. Draws in important but
+undersampled regions receive large weights.</p>
+<p><strong>Mathematics.</strong> If the normalized density is known and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+covers its support,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><msub><mi>𝔼</mi><mi>q</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mfrac><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">I=\mathbb E_q\left[f(X)\frac{\pi(X)}{q(X)}\right].</annotation></semantics></math></p>
+<p>For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mo>=</mo><mover><mi>π</mi><mo accent="true">̃</mo></mover><mi>/</mi><mi>Z</mi></mrow><annotation encoding="application/x-tex">\pi=\widetilde\pi/Z</annotation></semantics></math>
+with unknown
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>,
+use self-normalized importance sampling:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>i</mi></msub><mover><mo>∼</mo><mrow><mi mathvariant="normal">i</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">d</mi></mrow></mover><mi>q</mi><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mrow><mi mathvariant="normal">S</mi><mi mathvariant="normal">N</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">S</mi></mrow></msub><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>w</mi><mi>i</mi></msub><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>w</mi><mi>i</mi></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">X_i\overset{\mathrm{iid}}\sim q,\quad w_i=\frac{\widetilde\pi(X_i)}{q(X_i)},\qquad
+\widehat I_{\mathrm{SNIS}}=\frac{\sum_iw_if(X_i)}{\sum_iw_i}.</annotation></semantics></math></p>
+<p>This ratio estimator is generally biased at finite
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>,
+but consistent under suitable integrability and support assumptions. Its
+variance can be very large or infinite. A common weight-concentration
+diagnostic is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>ESS</mo><mrow><mi mathvariant="normal">I</mi><mi mathvariant="normal">S</mi></mrow></msub><mo>=</mo><mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>w</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mrow><munder><mo>∑</mo><mi>i</mi></munder><msubsup><mi>w</mi><mi>i</mi><mn>2</mn></msubsup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">\operatorname{ESS}_{\mathrm{IS}}=\frac{(\sum_iw_i)^2}{\sum_iw_i^2}.</annotation></semantics></math></p>
+<p><strong>Numerical example.</strong> Use our prior
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">q=\mathcal N(0,1)</annotation></semantics></math>.
+Then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">w(x)</annotation></semantics></math>
+is proportional to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>exp</mo><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mn>2</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mo>−</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\exp[-2(2-x)^2]</annotation></semantics></math>.
+Hypothetical draws
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">0,1,2</annotation></semantics></math>
+have weights
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mn>8</mn></mrow></msup><mo>,</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn></mrow></msup><mo>,</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">e^{-8},e^{-2},1</annotation></semantics></math>,
+giving a weighted mean about 1.880, compared with the unweighted mean 1.
+The weight ESS is only about 1.27 out of 3.</p>
+<p><strong>What problem does this solve?</strong> Importance sampling is
+a valid alternative to MCMC when a good global proposal exists. It also
+shows that an unknown normalizer alone is not sufficient to make a
+Bayesian computation impossible.</p>
+</section>
+<section id="why-straightforward-monte-carlo-often-struggles-in-bayesian-problems" class="level2">
+<h2>1.6 Why straightforward Monte Carlo often struggles in Bayesian
+problems</h2>
+<p><strong>Intuition.</strong> We can often evaluate a posterior density
+but cannot draw independent samples from it. Prior draws may almost
+never visit the concentrated posterior region, and importance weighting
+cannot recover regions never visited.</p>
+<p><strong>Mathematics.</strong> For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>I</mi><mi>d</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">q=\mathcal N(0,I_d)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mo>=</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>a</mi><mn>𝟏</mn><mo>,</mo><msub><mi>I</mi><mi>d</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi=\mathcal N(a\mathbf1,I_d)</annotation></semantics></math>,
+the normalized importance weight satisfies</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝔼</mi><mi>q</mi></msub><mi>w</mi><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>𝔼</mi><mi>q</mi></msub><msup><mi>w</mi><mn>2</mn></msup><mo>=</mo><msup><mi>e</mi><mrow><mi>d</mi><msup><mi>a</mi><mn>2</mn></msup></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">\mathbb E_qw=1,\qquad \mathbb E_qw^2=e^{da^2}.</annotation></semantics></math></p>
+<p>Thus the large-sample weight ESS fraction is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>d</mi><msup><mi>a</mi><mn>2</mn></msup></mrow></msup><annotation encoding="application/x-tex">e^{-da^2}</annotation></semantics></math>,
+when the corresponding empirical moments are adequately resolved.</p>
+<p><strong>Numerical example.</strong> For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">a=1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">d=10</annotation></semantics></math>,
+this fraction is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mn>10</mn></mrow></msup><mo>≈</mo><mn>4.54</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">e^{-10}\approx4.54\times10^{-5}</annotation></semantics></math>.
+The asymptotic expression predicts about 45 effective draws per million
+proposals; a particular finite run can behave much worse or give a
+misleading ESS estimate.</p>
+<p><strong>What problem does this solve?</strong> MCMC trades difficult
+independent global sampling for a sequence of simpler transitions. It
+can explore adaptively through the state space, at the price of
+dependence and initialization effects. It can still struggle with
+concentration, expensive forward solves, and separated modes.</p>
+<p><strong>Pause:</strong> the next question is: can we design dependent
+samples whose long-run frequencies are exactly the posterior
+frequencies?</p>
+</section>
+</section>
+<section id="part-2-markov-chains-15-30-minutes" class="level1">
+<h1>Part 2: Markov chains (15-30 minutes)</h1>
+<section id="the-markov-property" class="level2">
+<h2>2.1 The Markov property</h2>
+<p><strong>Intuition.</strong> The present state contains all the
+information needed to generate the next state. The next state may still
+be strongly dependent on the present state.</p>
+<p><strong>Mathematics.</strong> For measurable
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>∈</mo><mi>A</mi><mo>∣</mo><msub><mi>X</mi><mn>0</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>X</mi><mi>n</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>∈</mo><mi>A</mi><mo>∣</mo><msub><mi>X</mi><mi>n</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\mathbb P(X_{n+1}\in A\mid X_0,\ldots,X_n)=\mathbb P(X_{n+1}\in A\mid X_n).</annotation></semantics></math></p>
+<p>For a time-homogeneous chain this conditional distribution is
+described by one kernel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,
+independent of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.</p>
+<p><strong>Numerical example.</strong> Consider states
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0,1</annotation></semantics></math>
+and transition matrix</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>0.8</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0.2</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0.1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0.9</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">P=\begin{pmatrix}0.8&amp;0.2\\0.1&amp;0.9\end{pmatrix}.</annotation></semantics></math></p>
+<p>If the current state is 0, the next state is 1 with probability 0.2,
+regardless of how 0 was reached. Consecutive values are not independent
+because the probability is 0.9 when the current state is 1.</p>
+<p><strong>What problem does this solve?</strong> A sampler becomes a
+rule that takes the current state and fresh randomness and returns the
+next state.</p>
+</section>
+<section id="transition-kernels" class="level2">
+<h2>2.2 Transition kernels</h2>
+<p><strong>Intuition.</strong> A kernel specifies an entire distribution
+of possible next states for each current state.</p>
+<p><strong>Mathematics.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(x,A)</annotation></semantics></math>
+is a probability measure in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+and measurable in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>.
+A current distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>
+evolves according to</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mi>P</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>∫</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>μ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex"> (\mu P)(A)=\int P(x,A)\,\mu(dx).</annotation></semantics></math></p>
+<p>Two steps use</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>P</mi><mn>2</mn></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>∫</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>,</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>d</mi><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">P^2(x,A)=\int P(z,A)P(x,dz).</annotation></semantics></math></p>
+<p>For an accept/reject sampler with proposal density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>d</mi><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>∣</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>d</mi><mi>z</mi><mo>+</mo><mi>r</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>δ</mi><mi>x</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>r</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>1</mn><mo>−</mo><mo>∫</mo><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>∣</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>d</mi><mi>z</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">P(x,dz)=q(z\mid x)\alpha(x,z)\,dz+r(x)\delta_x(dz),\qquad
+r(x)=1-\int q(z\mid x)\alpha(x,z)\,dz.</annotation></semantics></math></p>
+<p>The atom at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+records rejection.</p>
+<p><strong>Numerical example.</strong> In the two-state chain,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>P</mi><mn>2</mn></msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msup><mn>0.8</mn><mn>2</mn></msup><mo>+</mo><mn>0.2</mn><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.66</mn></mrow><annotation encoding="application/x-tex">P^2(0,0)=0.8^2+0.2(0.1)=0.66</annotation></semantics></math>:
+return via 0 or via 1.</p>
+<p><strong>What problem does this solve?</strong> Kernel notation lets
+us prove correctness of an algorithm without analyzing every possible
+simulated trajectory. A proposal kernel and the resulting accepted-chain
+kernel are different objects.</p>
+</section>
+<section id="stationary-distributions" class="level2">
+<h2>2.3 Stationary distributions</h2>
+<p><strong>Intuition.</strong> A stationary distribution is unchanged by
+one transition. If a chain starts with that distribution, every
+subsequent state has it too.</p>
+<p><strong>Mathematics.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>
+is invariant, or stationary, if</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mi>P</mi><mo>=</mo><mi>π</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>∫</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\pi P=\pi,\qquad \pi(A)=\int P(x,A)\pi(dx).</annotation></semantics></math></p>
+<p>If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mn>0</mn></msub><mo>∼</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">X_0\sim\pi</annotation></semantics></math>,
+then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mi>n</mi></msub><mo>∼</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">X_n\sim\pi</annotation></semantics></math>
+for every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>,
+although the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>n</mi></msub><annotation encoding="application/x-tex">X_n</annotation></semantics></math>
+need not be independent.</p>
+<p><strong>Numerical example.</strong> Our matrix has stationary
+probabilities
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>3</mn><mo>,</mo><mn>2</mn><mi>/</mi><mn>3</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1/3,2/3)</annotation></semantics></math>
+because
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>3</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.2</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mi>/</mi><mn>3</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">(1/3)(0.2)=(2/3)(0.1)</annotation></semantics></math>.
+But starting deterministically at 0 does not start in stationarity.</p>
+<p><strong>What problem does this solve?</strong> The first correctness
+requirement is to make the posterior invariant. This alone is
+insufficient: the identity kernel
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>⋅</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>δ</mi><mi>x</mi></msub></mrow><annotation encoding="application/x-tex">P(x,\cdot)=\delta_x</annotation></semantics></math>
+preserves every distribution and never explores.</p>
+<p>Do not confuse time homogeneity (the transition rule does not change)
+with stationarity (the law of the process is at equilibrium).</p>
+</section>
+<section id="ergodicity" class="level2">
+<h2>2.4 Ergodicity</h2>
+<p><strong>Intuition.</strong> The chain must actually explore the
+target rather than stay in a closed region or retain permanent
+dependence on its starting point.</p>
+<p><strong>Mathematics.</strong> For a finite state space,
+irreducibility plus aperiodicity gives convergence to the unique
+invariant distribution. On general state spaces, positive Harris
+recurrence plus aperiodicity is a standard sufficient framework for
+total-variation convergence and, for integrable
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>,
+the ergodic law</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>→</mo><mo>∫</mo><mi>f</mi><mspace width="0.167em"></mspace><mi>d</mi><mi>π</mi><mspace width="1.0em"></mspace><mtext mathvariant="normal">a.s.</mtext></mrow><annotation encoding="application/x-tex">\frac1N\sum_{n=1}^Nf(X_n)\longrightarrow\int f\,d\pi\quad\text{a.s.}</annotation></semantics></math></p>
+<p>Here irreducibility means that all regions of positive target measure
+are accessible; Harris recurrence rules out permanent avoidance of such
+regions; aperiodicity rules out a compulsory cycle. Precise
+starting-state qualifications depend on the theorem used.</p>
+<p><strong>Numerical example.</strong> Starting our two-state chain at
+0,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>2</mn><mn>3</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mn>0.7</mn><mi>n</mi></msup><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\mathbb P(X_n=1)=\frac23(1-0.7^n).</annotation></semantics></math></p>
+<p>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">n=10</annotation></semantics></math>
+this is approximately 0.6478, approaching
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">2/3</annotation></semantics></math>.
+In contrast, a chain that deterministically alternates 0 and 1 has an
+invariant uniform distribution but an oscillating one-step marginal from
+a fixed start. Its time average still converges: convergence of
+marginals and convergence of averages are distinct statements.</p>
+<p><strong>What problem does this solve?</strong> Ergodic theorems
+justify MCMC averages. A central limit theorem and a finite asymptotic
+variance require additional assumptions; an invariant distribution or a
+law of large numbers alone does not supply an MCSE.</p>
+</section>
+<section id="detailed-balance" class="level2">
+<h2>2.5 Detailed balance</h2>
+<p><strong>Intuition.</strong> At equilibrium, the probability flow from
+one region to another equals the reverse flow. This is a convenient way
+to enforce invariance.</p>
+<p><strong>Mathematics.</strong> Reversibility with respect to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>
+means</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>d</mi><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>,</mo><mi>d</mi><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\pi(dx)P(x,dz)=\pi(dz)P(z,dx).</annotation></semantics></math></p>
+<p>Integrating over
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mi>P</mi><mo>=</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi P=\pi</annotation></semantics></math>.
+Detailed balance is sufficient, not necessary, for stationarity.</p>
+<p><strong>Numerical example.</strong> In our chain, the equilibrium
+flow
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>→</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0\to1</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>3</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.2</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>1</mn><mi>/</mi><mn>15</mn></mrow><annotation encoding="application/x-tex">(1/3)(0.2)=1/15</annotation></semantics></math>,
+exactly the reverse flow
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mi>/</mi><mn>3</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">(2/3)(0.1)</annotation></semantics></math>.</p>
+<p><strong>What problem does this solve?</strong> Metropolis-Hastings
+constructs an acceptance probability that makes these flows agree.
+Detailed balance does not imply rapid mixing or even irreducibility.</p>
+</section>
+</section>
+<section id="part-3-mcmc-algorithms-30-52-minutes" class="level1">
+<h1>Part 3: MCMC algorithms (30-52 minutes)</h1>
+<section id="the-metropolis-algorithm" class="level2">
+<h2>3.1 The Metropolis algorithm</h2>
+<p><strong>Intuition.</strong> Make a symmetric proposal. Always accept
+moves to a higher-density point; accept some moves to lower density.
+Those downward moves are essential for sampling uncertainty rather than
+just climbing to a mode.</p>
+<p><strong>Mathematics.</strong> With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>∣</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>∣</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">q(z\mid x)=q(x\mid z)</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>∼</mo><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>Z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>min</mo><mrow><mo stretchy="true" form="prefix">{</mo><mn>1</mn><mo>,</mo><mfrac><mrow><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>Z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo stretchy="true" form="postfix">}</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">Z\sim q(\cdot\mid x),\qquad \alpha(x,Z)=\min\left\{1,\frac{\widetilde\pi(Z)}{\widetilde\pi(x)}\right\}.</annotation></semantics></math></p>
+<p>Draw
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>∼</mo><mo>Unif</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">U\sim\operatorname{Unif}(0,1)</annotation></semantics></math>
+and set the next state to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>&lt;</mo><mi>α</mi></mrow><annotation encoding="application/x-tex">U&lt;\alpha</annotation></semantics></math>;
+otherwise retain
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>.
+The unknown normalizer cancels in the ratio.</p>
+<p><strong>Numerical example.</strong> In our Gaussian posterior,
+propose
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>2.1</mn></mrow><annotation encoding="application/x-tex">z=2.1</annotation></semantics></math>
+from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>1.6</mn></mrow><annotation encoding="application/x-tex">x=1.6</annotation></semantics></math>.
+Then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mo>exp</mo><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>2.1</mn><mo>−</mo><mn>1.6</mn><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mrow><mn>2</mn><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.2</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>0.625</mn></mrow></msup><mo>≈</mo><mn>0.5353</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">\alpha=\exp\left[-\frac{(2.1-1.6)^2}{2(0.2)}\right]=e^{-0.625}\approx0.5353.</annotation></semantics></math></p>
+<p>Accept if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">U=0.3</annotation></semantics></math>;
+reject if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">U=0.8</annotation></semantics></math>.
+A proposal from 2.1 back to 1.6 is accepted with probability 1.</p>
+<p><strong>What problem does this solve?</strong> This is the smallest
+useful posterior sampler. After rejection, record the repeated state.
+Keeping only accepted states generally changes the stationary
+distribution of the recorded sequence.</p>
+</section>
+<section id="metropolis-hastings" class="level2">
+<h2>3.2 Metropolis-Hastings</h2>
+<p><strong>Intuition.</strong> An asymmetric proposal may favor one
+direction. Correct for that asymmetry so the accepted chain has the
+right equilibrium frequencies.</p>
+<p><strong>Mathematics.</strong> For target and proposal densities with
+the appropriate support,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>min</mo><mrow><mo stretchy="true" form="prefix">{</mo><mn>1</mn><mo>,</mo><mfrac><mrow><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>∣</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>∣</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo stretchy="true" form="postfix">}</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\alpha(x,z)=\min\left\{1,
+\frac{\widetilde\pi(z)q(x\mid z)}{\widetilde\pi(x)q(z\mid x)}\right\}.</annotation></semantics></math></p>
+<p>For a move with positive forward proposal density and zero reverse
+density, the acceptance probability is zero. Initialize at a state with
+positive target density. The off-diagonal detailed-balance identity
+is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>∣</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>min</mo><mo stretchy="false" form="prefix">{</mo><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>∣</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>∣</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="false" form="postfix">}</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">\pi(x)q(z\mid x)\alpha(x,z)=\min\{\pi(x)q(z\mid x),\pi(z)q(x\mid z)\},</annotation></semantics></math></p>
+<p>which is symmetric in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>,</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">x,z</annotation></semantics></math>.
+The rejection term lies on the diagonal and also satisfies balance.</p>
+<p><strong>Numerical example.</strong> Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\pi(0)=0.2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">\pi(1)=0.8</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">q(1\mid0)=0.9</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>∣</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">q(0\mid1)=0.3</annotation></semantics></math>.
+Then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="2.0em"></mspace><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.75</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">\alpha(0,1)=1,\qquad \alpha(1,0)=0.75.</annotation></semantics></math></p>
+<p>The accepted probability flows agree:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.2</mn><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.9</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.8</mn><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.3</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.75</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.18</mn></mrow><annotation encoding="application/x-tex">0.2(0.9)=0.8(0.3)(0.75)=0.18</annotation></semantics></math>.
+Ignoring the proposal ratio would give the wrong invariant
+distribution.</p>
+<p><strong>What problem does this solve?</strong> MH is a general
+correction mechanism. Random walks, independence proposals,
+gradient-based proposals, and many other designs fit this framework.</p>
+</section>
+<section id="gibbs-sampling" class="level2">
+<h2>3.3 Gibbs sampling</h2>
+<p><strong>Intuition.</strong> Sampling the joint distribution may be
+hard while sampling one conditional distribution at a time is easy.
+Update coordinates or blocks using their exact full conditionals.</p>
+<p><strong>Mathematics.</strong> For two variables, one systematic sweep
+is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>X</mi><mn>1</mn><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>∼</mo><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>∣</mo><msubsup><mi>X</mi><mn>2</mn><mi>n</mi></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>X</mi><mn>2</mn><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>∼</mo><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>∣</mo><msubsup><mi>X</mi><mn>1</mn><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">X_1^{n+1}\sim\pi(x_1\mid X_2^n),\qquad
+X_2^{n+1}\sim\pi(x_2\mid X_1^{n+1}).</annotation></semantics></math></p>
+<p>Each conditional-update kernel preserves
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>;
+therefore their composition preserves
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>.
+An exact full-conditional update is also an MH update with acceptance
+probability 1. A systematic full sweep need not be reversible,
+illustrating that detailed balance is not necessary.</p>
+<p><strong>Numerical example.</strong> For</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>X</mi><mn>1</mn></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>X</mi><mn>2</mn></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>ρ</mi></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>ρ</mi></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\begin{pmatrix}X_1\\X_2\end{pmatrix}\sim\mathcal N\left(0,
+\begin{pmatrix}1&amp;\rho\\\rho&amp;1\end{pmatrix}\right),</annotation></semantics></math></p>
+<p>the conditionals are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mn>1</mn></msub><mo>∣</mo><msub><mi>X</mi><mn>2</mn></msub><mo>=</mo><msub><mi>x</mi><mn>2</mn></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ρ</mi><msub><mi>x</mi><mn>2</mn></msub><mo>,</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">X_1\mid X_2=x_2\sim\mathcal N(\rho x_2,1-\rho^2)</annotation></semantics></math>
+and similarly for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mn>2</mn></msub><mo>∣</mo><msub><mi>X</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">X_2\mid X_1</annotation></semantics></math>.
+With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">\rho=0.9</annotation></semantics></math>
+and current
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x_2=1</annotation></semantics></math>,
+draw
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mn>1</mn></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.9</mn><mo>,</mo><mn>0.19</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">X_1\sim\mathcal N(0.9,0.19)</annotation></semantics></math>.
+A standard-normal innovation of -1 gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>≈</mo><mn>0.4641</mn></mrow><annotation encoding="application/x-tex">x_1\approx0.4641</annotation></semantics></math>;
+a zero innovation in the second update gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>2</mn></msub><mo>≈</mo><mn>0.4177</mn></mrow><annotation encoding="application/x-tex">x_2\approx0.4177</annotation></semantics></math>.</p>
+<p><strong>What problem does this solve?</strong> Gibbs is attractive
+for conditional conjugacy and hierarchical models. Strong correlations
+can make coordinate updates very slow despite 100% acceptance. If exact
+conditionals are unavailable, MH updates inside a Gibbs sweep give
+Metropolis-within-Gibbs.</p>
+</section>
+<section id="random-walk-proposals" class="level2">
+<h2>3.4 Random-walk proposals</h2>
+<p><strong>Intuition.</strong> Propose a random perturbation of the
+current point. Small steps are accepted often but move slowly; large
+steps travel farther but are rejected more frequently.</p>
+<p><strong>Mathematics.</strong> A common proposal is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>=</mo><mi>X</mi><mo>+</mo><mi>s</mi><mi>L</mi><mi>ξ</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>ξ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>I</mi><mi>d</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>L</mi><msup><mi>L</mi><mi>⊤</mi></msup><mo>=</mo><mi>Σ</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">Z=X+sL\xi,\qquad \xi\sim\mathcal N(0,I_d),\qquad LL^\top=\Sigma,</annotation></semantics></math></p>
+<p>with fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>.
+This is symmetric. Here
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+is a step scale and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>
+describes the direction-dependent shape. Choosing a shape aligned with
+the posterior can improve exploration greatly.</p>
+<p><strong>Numerical example.</strong> Our posterior has standard
+deviation 0.4472. A proposal scale
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><mn>0.02</mn></mrow><annotation encoding="application/x-tex">s=0.02</annotation></semantics></math>
+is tiny;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">s=1</annotation></semantics></math>
+makes substantial moves;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">s=5</annotation></semantics></math>
+often proposes far outside the main posterior region. For a Gaussian
+target in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>
+dimensions, an isotropic proposal perturbation has expected squared
+length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><msup><mi>s</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">ds^2</annotation></semantics></math>;
+retaining useful acceptance generally requires shrinking the
+per-coordinate scale as dimension grows.</p>
+<p><strong>What problem does this solve?</strong> Random-walk Metropolis
+is a useful reference implementation. It exposes the central efficiency
+tradeoff and can work when gradients are unavailable, but often
+struggles under high-dimensional mesh refinement.</p>
+</section>
+<section id="first-implementation-a-correct-random-walk-metropolis-sampler" class="level2">
+<h2>First implementation: a correct random-walk Metropolis sampler</h2>
+<p>Use log densities to avoid numerical underflow. This code counts and
+stores every post-warmup transition, including rejections.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> log_target(x):</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span>x<span class="op">*</span>x <span class="op">-</span> <span class="fl">0.5</span><span class="op">*</span>((<span class="fl">2.0</span><span class="op">-</span>x)<span class="op">/</span><span class="fl">0.5</span>)<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rwm(logp, x0, scale, draws<span class="op">=</span><span class="dv">10_000</span>, warmup<span class="op">=</span><span class="dv">2_000</span>, seed<span class="op">=</span><span class="dv">42</span>):</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    rng <span class="op">=</span> np.random.default_rng(seed)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="bu">float</span>(x0)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    lp <span class="op">=</span> <span class="bu">float</span>(logp(x))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> np.isfinite(lp):</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;Initial state must have finite log density&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> np.empty(draws)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    accepted <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(warmup <span class="op">+</span> draws):</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        z <span class="op">=</span> x <span class="op">+</span> scale<span class="op">*</span>rng.normal()</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        lz <span class="op">=</span> <span class="bu">float</span>(logp(z))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> np.isnan(lz) <span class="kw">or</span> np.isposinf(lz):</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;Invalid proposed log density&quot;</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        take <span class="op">=</span> np.log(rng.uniform()) <span class="op">&lt;</span> <span class="bu">min</span>(<span class="fl">0.0</span>, lz<span class="op">-</span>lp)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> take:</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            x, lp <span class="op">=</span> z, lz</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> t <span class="op">&gt;=</span> warmup:</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            samples[t<span class="op">-</span>warmup] <span class="op">=</span> x</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>            accepted <span class="op">+=</span> <span class="bu">int</span>(take)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> samples, accepted<span class="op">/</span>draws</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>chains <span class="op">=</span> np.stack([</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    rwm(log_target, x0, scale<span class="op">=</span><span class="fl">1.0</span>, seed<span class="op">=</span><span class="dv">100</span><span class="op">+</span>j)[<span class="dv">0</span>]</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j, x0 <span class="kw">in</span> <span class="bu">enumerate</span>([<span class="op">-</span><span class="fl">3.0</span>, <span class="fl">0.0</span>, <span class="fl">3.0</span>, <span class="fl">6.0</span>])</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(chains.mean(), chains.var(ddof<span class="op">=</span><span class="dv">1</span>))  <span class="co"># near 1.6 and 0.2</span></span></code></pre></div>
+<p>The returned acceptance rate covers retained transitions only. This
+teaching implementation does not adapt its scale during warmup. The
+attached Python package includes uncertainty estimates, plots, Gibbs,
+fixed-length HMC, and automated checks against exact Gaussian
+answers.</p>
+<p><strong>Pause:</strong> correctness of the transition rule is only
+half the problem. We must now assess the finite run.</p>
+</section>
+</section>
+<section id="part-4-practical-mcmc-52-70-minutes" class="level1">
+<h1>Part 4: Practical MCMC (52-70 minutes)</h1>
+<section id="burn-in-and-warmup" class="level2">
+<h2>4.1 Burn-in and warmup</h2>
+<p><strong>Intuition.</strong> A chain initialized far from the
+posterior may spend early iterations approaching it. Adaptive samplers
+also use an initial phase to learn numerical tuning parameters.</p>
+<p><strong>Mathematics.</strong> Discarding
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+iterations gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mrow><mi>B</mi><mo>,</mo><mi>N</mi></mrow></msub><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mi>B</mi><mo>+</mo><mn>1</mn></mrow><mrow><mi>B</mi><mo>+</mo><mi>N</mi></mrow></munderover><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>𝔼</mi><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mrow><mi>B</mi><mo>,</mo><mi>N</mi></mrow></msub><mo>−</mo><mi>I</mi><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mi>B</mi><mo>+</mo><mn>1</mn></mrow><mrow><mi>B</mi><mo>+</mo><mi>N</mi></mrow></munderover><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">[</mo><msub><mi>μ</mi><mn>0</mn></msub><msup><mi>P</mi><mi>n</mi></msup><mi>f</mi><mo>−</mo><mi>π</mi><mi>f</mi><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">]</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">\widehat I_{B,N}=\frac1N\sum_{n=B+1}^{B+N}f(X_n),\qquad
+\mathbb E\widehat I_{B,N}-I=\frac1N\sum_{n=B+1}^{B+N}\big[\mu_0P^nf-\pi f\big].</annotation></semantics></math></p>
+<p>Burn-in aims to reduce initialization bias. Warmup can additionally
+adapt proposal scales or an HMC metric. In the simple workflow,
+adaptation ends before the retained run; continuing arbitrary adaptation
+can invalidate the fixed-kernel theory.</p>
+<p><strong>Numerical example.</strong> Start the scalar chain at -3
+although its posterior mean is 1.6. The first segment may trend upward.
+Dropping 2,000 iterations is an experimental choice, not a theorem that
+all later draws are stationary. Starting at the posterior mean also does
+not produce the posterior distribution.</p>
+<p><strong>What problem does this solve?</strong> Use a warmup phase,
+initialize several chains at meaningfully dispersed plausible states,
+and diagnose the retained phase. Removing more draws cannot make a chain
+cross a barrier it never crosses.</p>
+</section>
+<section id="mixing" class="level2">
+<h2>4.2 Mixing</h2>
+<p><strong>Intuition.</strong> Mixing describes how rapidly a chain
+forgets its start and explores different parts of the target. A correct
+sampler can mix so slowly that its finite output is unusable.</p>
+<p><strong>Mathematics.</strong> One theoretical measure is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="postfix">∥</mo><msup><mi>P</mi><mi>n</mi></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>⋅</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>π</mi><msub><mo stretchy="false" form="postfix">∥</mo><mrow><mi mathvariant="normal">T</mi><mi mathvariant="normal">V</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">\|P^n(x,\cdot)-\pi\|_{\mathrm{TV}}.</annotation></semantics></math></p>
+<p>For reversible chains, spectral properties of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+on centered
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>L</mi><mn>2</mn></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">L^2(\pi)</annotation></semantics></math>
+functions help quantify convergence and autocorrelation. In practice,
+efficiency also depends on the particular function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+being estimated.</p>
+<p><strong>Numerical example.</strong> Consider a mixture
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>5</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>5</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tfrac12\mathcal N(-5,1)+\tfrac12\mathcal N(5,1)</annotation></semantics></math>.
+A small-step random walk can explore one mode thoroughly and fail to
+reach the other in a long finite run. Its histogram may look smooth
+while its estimated mean is near -5 or 5, instead of the correct 0.</p>
+<p><strong>What problem does this solve?</strong> Poor mixing calls for
+a better proposal, reparameterization, blocking, tempering, or another
+algorithm. A longer run helps only if its length is adequate relative to
+the actual exploration timescale.</p>
+</section>
+<section id="autocorrelation" class="level2">
+<h2>4.3 Autocorrelation</h2>
+<p><strong>Intuition.</strong> Adjacent draws often repeat similar
+information. The relevant dependence is the dependence of the quantity
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(X_n)</annotation></semantics></math>,
+not just of each raw parameter.</p>
+<p><strong>Mathematics.</strong> For a stationary chain with finite
+variance, define</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ρ</mi><mi>f</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mrow><msub><mo>Cov</mo><mi>π</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">\rho_f(k)=\frac{\operatorname{Cov}_\pi(f(X_0),f(X_k))}{\sigma_f^2}.</annotation></semantics></math></p>
+<p>Then the exact
+finite-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+identity is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>Var</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><mi>N</mi></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><mn>1</mn><mo>+</mo><mn>2</mn><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mfrac><mi>k</mi><mi>N</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>ρ</mi><mi>f</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\operatorname{Var}(\widehat I_N)=\frac{\sigma_f^2}{N}\left[1+2\sum_{k=1}^{N-1}\left(1-\frac{k}{N}\right)\rho_f(k)\right].</annotation></semantics></math></p>
+<p><strong>Numerical example.</strong> A stationary AR(1) chain</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>μ</mi><mo>+</mo><mi>a</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo>−</mo><mi>μ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>σ</mi><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>a</mi><mn>2</mn></msup></mrow></msqrt><mspace width="0.167em"></mspace><msub><mi>ξ</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">X_{n+1}=\mu+a(X_n-\mu)+\sigma\sqrt{1-a^2}\,\xi_n</annotation></semantics></math></p>
+<p>has invariant distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal N(\mu,\sigma^2)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msup><mi>a</mi><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">\rho(k)=a^k</annotation></semantics></math>.
+With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">a=0.9</annotation></semantics></math>,
+lag-1 correlation is 0.9 and lag-10 correlation is approximately
+0.349.</p>
+<p><strong>What problem does this solve?</strong> Autocorrelation
+explains why the IID standard error formula is too optimistic for
+positively correlated MCMC output.</p>
+</section>
+<section id="effective-sample-size-and-monte-carlo-standard-error" class="level2">
+<h2>4.4 Effective sample size and Monte Carlo standard error</h2>
+<p><strong>Intuition.</strong> ESS expresses the variance of a
+correlated average in units of independent draws. It is a property of an
+estimator, not a count of literally independent states hidden inside the
+output.</p>
+<p><strong>Mathematics.</strong> When the relevant CLT and summability
+conditions hold,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>τ</mi><mi>f</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mn>2</mn><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mo accent="false">∞</mo></munderover><msub><mi>ρ</mi><mi>f</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>N</mi><mrow><mrow><mi mathvariant="normal">e</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow><mo>,</mo><mi>f</mi></mrow></msub><mo>≈</mo><mfrac><mi>N</mi><msub><mi>τ</mi><mi>f</mi></msub></mfrac><mo>,</mo><mspace width="2.0em"></mspace><mo>MCSE</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>I</mi><mo accent="true">̂</mo></mover><mi>N</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><msqrt><mfrac><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><msub><mi>N</mi><mrow><mrow><mi mathvariant="normal">e</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow><mo>,</mo><mi>f</mi></mrow></msub></mfrac></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">\tau_f=1+2\sum_{k=1}^\infty\rho_f(k),\qquad
+N_{{\mathrm{eff}},f}\approx\frac{N}{\tau_f},\qquad
+\operatorname{MCSE}(\widehat I_N)\approx\sqrt{\frac{\sigma_f^2}{N_{{\mathrm{eff}},f}}}.</annotation></semantics></math></p>
+<p>The Markov chain CLT has asymptotic variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><msub><mi>τ</mi><mi>f</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_f^2\tau_f</annotation></semantics></math>.
+Negative correlations can give ESS greater than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>.
+A chain may have different ESS values for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>X</mi><mn>2</mn></msup><annotation encoding="application/x-tex">X^2</annotation></semantics></math>,
+an event indicator, and a predictive quantity. The importance-weight ESS
+from Part 1 measures a different source of inefficiency.</p>
+<p><strong>Numerical example.</strong> For the AR(1) example,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mi>a</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>a</mi></mrow></mfrac><mo>=</mo><mn>19</mn><mspace width="1.0em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>a</mi><mo>=</mo><mn>0.9</mn><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\tau=\frac{1+a}{1-a}=19\quad(a=0.9).</annotation></semantics></math></p>
+<p>Thus 10,000 draws have ESS about 526 for the mean. With posterior
+variance 0.2, MCSE is about 0.0195, over four times the IID value
+0.00447.</p>
+<p><strong>What problem does this solve?</strong> Decide simulation
+length from the MCSE needed for your scientific quantity. If a mean MCSE
+of 0.01 is required here, target ESS of at least
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.2</mn><mi>/</mi><msup><mn>0.01</mn><mn>2</mn></msup><mo>=</mo><mn>2</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">0.2/0.01^2=2,000</annotation></semantics></math>,
+after resolving convergence concerns. Use established autocorrelation or
+spectral-variance estimators; summing every noisy empirical ACF lag is
+unstable. Routine thinning usually discards useful information and does
+not fix mixing; retain draws unless storage or downstream cost justifies
+thinning.</p>
+</section>
+<section id="acceptance-rates" class="level2">
+<h2>4.5 Acceptance rates</h2>
+<p><strong>Intuition.</strong> Acceptance tells you how often a proposal
+is used. It does not tell you whether accepted moves travel far enough
+to explore the target.</p>
+<p><strong>Mathematics.</strong> For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+retained transitions,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>a</mi><mo accent="true">̂</mo></mover><mo>=</mo><mfrac><mrow><mi>#</mi><mo stretchy="false" form="prefix">{</mo><mtext mathvariant="normal">accepted proposals</mtext><mo stretchy="false" form="postfix">}</mo></mrow><mi>N</mi></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">\widehat a=\frac{\#\{\text{accepted proposals}\}}{N}.</annotation></semantics></math></p>
+<p>An efficiency objective is ESS per second or per forward/gradient
+evaluation. Expected squared jumping distance,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mo stretchy="false" form="postfix">∥</mo><msub><mi>X</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>X</mi><mi>n</mi></msub><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\mathbb E\|X_{n+1}-X_n\|^2</annotation></semantics></math>,
+is another useful proxy in suitable settings.</p>
+<p><strong>Numerical example.</strong> For a stationary scalar Gaussian
+target with standard deviation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+and a Gaussian random-walk step of standard deviation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>,
+the exact mean acceptance is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>2</mn><mi>π</mi></mfrac><mo>arctan</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mn>2</mn><mi>σ</mi></mrow><mi>s</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">a(s)=\frac2\pi\arctan\left(\frac{2\sigma}{s}\right).</annotation></semantics></math></p>
+<p>Using
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><msqrt><mn>0.2</mn></msqrt></mrow><annotation encoding="application/x-tex">\sigma=\sqrt{0.2}</annotation></semantics></math>,
+scales 0.05, 1, and 5 give acceptance about 0.964, 0.465, and 0.113. The
+first has the highest acceptance but takes tiny steps. Exact Gibbs
+updates always accept and can still mix poorly.</p>
+<p><strong>What problem does this solve?</strong> Use acceptance as a
+tuning signal alongside ESS and plots. The famous 0.234 rule is an
+asymptotic optimum for particular high-dimensional random-walk target
+families and efficiency criteria; it is not a universal target. HMC
+acceptance and the NUTS acceptance statistic have different tuning
+behavior [1, 2].</p>
+<p>An executed experiment with four chains and 10,000 retained draws per
+chain gave:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step scale</th>
+<th>Acceptance</th>
+<th>Estimated mean</th>
+<th>Batch estimate of mean ESS</th>
+<th>Modern R-hat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.05</td>
+<td>0.965</td>
+<td>1.5848</td>
+<td>513</td>
+<td>1.0529</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>0.466</td>
+<td>1.5950</td>
+<td>9,287</td>
+<td>1.0010</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>0.113</td>
+<td>1.5901</td>
+<td>3,572</td>
+<td>1.0021</td>
+</tr>
+</tbody>
+</table>
+<p>All runs retained 40,000 states in total. The slow run fails the
+R-hat screening check; its batch ESS and MCSE are provisional and can be
+optimistic because the batches are short relative to its dependence. The
+important comparison is that the highest acceptance did not produce the
+most useful sample.</p>
+</section>
+<section id="trace-plots" class="level2">
+<h2>4.6 Trace plots</h2>
+<p><strong>Intuition.</strong> Plot values in iteration order to see
+trends, sticking, and disagreement across chains. A histogram throws
+away time order and can hide these problems.</p>
+<p><strong>Mathematics.</strong> A trace plot is the set of ordered
+pairs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo>,</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{(n,f(X_n))\}</annotation></semantics></math>.
+Inspect several chains overlaid or in aligned panels. For a Gaussian
+target, nearly all posterior draws lie within about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>±</mo><mn>3</mn><mi>σ</mi></mrow><annotation encoding="application/x-tex">\mu\pm3\sigma</annotation></semantics></math>,
+although occasional excursions are expected.</p>
+<p><strong>Numerical example.</strong> Our posterior has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>±</mo><mn>3</mn><mi>σ</mi><mo>≈</mo><mrow><mo stretchy="true" form="prefix">[</mo><mn>0.258</mn><mo>,</mo><mn>2.942</mn><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\mu\pm3\sigma\approx[0.258,2.942]</annotation></semantics></math>.
+Chains that repeatedly explore this range and overlap are more
+reassuring than one stuck near 1.5 and another near 2.5. But a
+plausible-looking trace restricted to one mixture mode can still be
+misleading.</p>
+<p><strong>What problem does this solve?</strong> Inspect traces of
+parameters, log density, and scientific quantities. Pair plots reveal
+correlations; rank plots compare how chains occupy the pooled
+distribution. Visual checks supplement quantitative diagnostics, without
+certifying convergence.</p>
+
+</section>
+<section id="convergence-diagnostics" class="level2">
+<h2>4.7 Convergence diagnostics</h2>
+<p><strong>Intuition.</strong> Independent chains started in different
+places should eventually produce compatible distributions. Diagnostics
+look for evidence that they have not done so. Agreement cannot reveal a
+region every chain missed.</p>
+<p><strong>Mathematics.</strong> For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>
+chains of length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>,
+define within-chain variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>,
+chain means
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>x</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar x_j</annotation></semantics></math>,
+grand mean
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>x</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar x</annotation></semantics></math>,
+and</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mfrac><mi>n</mi><mrow><mi>M</mi><mo>−</mo><mn>1</mn></mrow></mfrac><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>x</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>−</mo><mover><mi>x</mi><mo accent="true">‾</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>,</mo><mspace width="2.0em"></mspace><mover><mi>V</mi><mo accent="true">̂</mo></mover><mo>=</mo><mfrac><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow><mi>n</mi></mfrac><mi>W</mi><mo>+</mo><mfrac><mi>B</mi><mi>n</mi></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mover><mi>R</mi><mo accent="true">̂</mo></mover><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">l</mi></mrow></msub><mo>=</mo><msqrt><mrow><mover><mi>V</mi><mo accent="true">̂</mo></mover><mi>/</mi><mi>W</mi></mrow></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">B=\frac{n}{M-1}\sum_{j=1}^M(\bar x_j-\bar x)^2,\qquad
+\widehat V=\frac{n-1}{n}W+\frac{B}{n},\qquad
+\widehat R_{\mathrm{classical}}=\sqrt{\widehat V/W}.</annotation></semantics></math></p>
+<p>This explains the comparison. Modern practice uses rank-normalized
+split and folded versions, which detect more failures than the classical
+formula [3]. Bulk ESS summarizes efficiency in the center of the
+distribution; tail ESS targets tail/quantile behavior. For a particular
+posterior mean, estimate its own MCSE rather than interpreting
+rank-based bulk ESS as its exact variance ESS.</p>
+<p><strong>Numerical example.</strong> Suppose
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">n=1,000</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">W=0.2</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">B=20</annotation></semantics></math>.
+The classical value is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.999</mn><mo>⋅</mo><mn>0.2</mn><mo>+</mo><mn>0.02</mn><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mn>0.2</mn></mrow></msqrt><mo>≈</mo><mn>1.048</mn></mrow><annotation encoding="application/x-tex">\sqrt{(0.999\cdot0.2+0.02)/0.2}\approx1.048</annotation></semantics></math>,
+indicating disagreement. A reported modern
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>R</mi><mo accent="true">̂</mo></mover><mo>=</mo><mn>1.001</mn></mrow><annotation encoding="application/x-tex">\widehat R=1.001</annotation></semantics></math>
+is reassuring but does not prove all modes were visited.</p>
+<p><strong>What problem does this solve?</strong> A practical starting
+workflow is four chains, modern
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>R</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\widehat R</annotation></semantics></math>
+near 1 (typically below 1.01), adequate bulk and tail ESS, and an MCSE
+small enough for the scientific decision. Numerical thresholds are
+screening conventions, not correctness proofs [4]. For HMC, also
+investigate divergences, repeated maximum tree-depth events, and energy
+diagnostics. A divergence is a failure of reliable numerical trajectory
+integration in a region of the posterior, and can signal biased
+exploration [2].</p>
+<p>For a PDE problem, keep two errors separate: MCMC error relative to
+the discretized posterior and discretization error relative to the
+intended continuum posterior. More chain iterations reduce only the
+former.</p>
+</section>
+<section id="a-practical-end-to-end-workflow" class="level2">
+<h2>A practical end-to-end workflow</h2>
+<ol type="1">
+<li>Define the posterior and the scientific quantities
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>.</li>
+<li>Implement a stable unnormalized log density; verify it on a solvable
+example.</li>
+<li>Choose a sampler and parameterization; evaluate gradient and
+forward-solve costs where relevant.</li>
+<li>Run several chains with warmup. Freeze ordinary tuning before
+retaining samples.</li>
+<li>Inspect traces, modern
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>R</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\widehat R</annotation></semantics></math>,
+ESS, and sampler-specific diagnostics.</li>
+<li>Fix exploration problems before trusting an apparently small
+MCSE.</li>
+<li>Estimate posterior quantities and their MCSE; extend a trustworthy
+run if numerical precision is insufficient.</li>
+<li>Report the model/discretization, sampler, tuning, retained draws,
+diagnostics, and accuracy relevant to the reported quantities.</li>
+</ol>
+</section>
+</section>
+<section id="part-5-modern-perspective-70-80-minutes" class="level1">
+<h1>Part 5: Modern perspective (70-80 minutes)</h1>
+<section id="hamiltonian-monte-carlo" class="level2">
+<h2>5.1 Hamiltonian Monte Carlo</h2>
+<p><strong>Intuition.</strong> A random walk chooses directions without
+using posterior geometry. HMC introduces momentum and follows a
+dynamical trajectory that moves through the posterior while
+approximately preserving a suitable energy. Momentum is refreshed to
+create stochastic exploration.</p>
+<p><strong>Mathematics.</strong> Write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>−</mi><mo>log</mo><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">U(x)=-\log\widetilde\pi(x)</annotation></semantics></math>
+and introduce momentum
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>M</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">p\sim\mathcal N(0,M)</annotation></semantics></math>
+with a fixed positive-definite mass matrix. The extended target and
+Hamiltonian are</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>π</mi><mo accent="true">¯</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>p</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>H</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>p</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo>,</mo><mspace width="2.0em"></mspace><mi>H</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>p</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>U</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><msup><mi>p</mi><mi>⊤</mi></msup><msup><mi>M</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>p</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">\overline\pi(x,p)\propto e^{-H(x,p)},\qquad
+H(x,p)=U(x)+\tfrac12p^\top M^{-1}p.</annotation></semantics></math></p>
+<p>The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+marginal is the desired posterior. Hamilton’s equations are</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>x</mi><mo accent="true">̇</mo></mover><mo>=</mo><msup><mi>M</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>p</mi><mo>,</mo><mspace width="2.0em"></mspace><mover><mi>p</mi><mo accent="true">̇</mo></mover><mo>=</mo><mi>−</mi><mi>∇</mi><mi>U</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\dot x=M^{-1}p,\qquad \dot p=-\nabla U(x).</annotation></semantics></math></p>
+<p>A leapfrog step with size
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>
+is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msub><mo>=</mo><mi>p</mi><mo>−</mo><mfrac displaystyle="false"><mi>ϵ</mi><mn>2</mn></mfrac><mi>∇</mi><mi>U</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>x</mi><mi>′</mi><mo>=</mo><mi>x</mi><mo>+</mo><mi>ϵ</mi><msup><mi>M</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msub><mi>p</mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>p</mi><mi>′</mi><mo>=</mo><msub><mi>p</mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msub><mo>−</mo><mfrac displaystyle="false"><mi>ϵ</mi><mn>2</mn></mfrac><mi>∇</mi><mi>U</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">p_{1/2}=p-\tfrac\epsilon2\nabla U(x),\qquad
+x&#39;=x+\epsilon M^{-1}p_{1/2},\qquad
+p&#39;=p_{1/2}-\tfrac\epsilon2\nabla U(x&#39;).</annotation></semantics></math></p>
+<p>Compose
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+steps and apply the MH correction</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mo>min</mo><mo stretchy="false" form="prefix">{</mo><mn>1</mn><mo>,</mo><msup><mi>e</mi><mrow><mi>H</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>p</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>H</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mi>′</mi><mo>,</mo><mi>p</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">\alpha=\min\{1,e^{H(x,p)-H(x&#39;,p&#39;)}\}.</annotation></semantics></math></p>
+<p>The standard proposal includes a final momentum flip, making
+reversibility explicit; the kinetic energy is unchanged by that flip.
+Leapfrog’s volume preservation means there is no Jacobian correction. An
+arbitrary ODE solver cannot simply be substituted with the same
+justification [2].</p>
+<p><strong>Numerical example.</strong> For our target, take
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>2.5</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>−</mo><mn>1.6</mn><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">U(x)=2.5(x-1.6)^2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">M=1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>1.6</mn></mrow><annotation encoding="application/x-tex">x=1.6</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p=1</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϵ</mi><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\epsilon=0.2</annotation></semantics></math>.
+One leapfrog step gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p_{1/2}=1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mi>′</mi><mo>=</mo><mn>1.8</mn></mrow><annotation encoding="application/x-tex">x&#39;=1.8</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mi>′</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">p&#39;=0.9</annotation></semantics></math>.
+The energy increases from 0.5 to 0.505, so acceptance is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mn>0.005</mn></mrow></msup><mo>≈</mo><mn>0.9950</mn></mrow><annotation encoding="application/x-tex">e^{-0.005}\approx0.9950</annotation></semantics></math>.
+The move travels about 0.45 posterior standard deviations with very high
+acceptance.</p>
+<p><strong>What problem does this solve?</strong> HMC can make long,
+directed moves with high acceptance on smooth continuous targets. It
+needs gradients, a suitable parameterization, a step size, a mass
+matrix, and an integration length. In PDE inverse problems, gradients
+may require adjoint solves. Compare ESS per computational cost, not just
+iterations. HMC is a sampling method; its trajectories are not gradient
+descent toward the MAP.</p>
+</section>
+<section id="the-no-u-turn-sampler-nuts" class="level2">
+<h2>5.2 The No-U-Turn Sampler (NUTS)</h2>
+<p><strong>Intuition.</strong> A short HMC trajectory barely moves; an
+excessively long one can turn back and waste work. NUTS constructs
+trajectories and selects states using a rule that avoids requiring a
+fixed hand-tuned trajectory length.</p>
+<p><strong>Mathematics.</strong> A simplified endpoint no-U-turn check
+uses endpoints
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>x</mi><mo>−</mo></msup><mo>,</mo><msup><mi>p</mi><mo>−</mo></msup><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(x^-,p^-)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>x</mi><mo>+</mo></msup><mo>,</mo><msup><mi>p</mi><mo>+</mo></msup><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(x^+,p^+)</annotation></semantics></math>
+and displacement
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mo>=</mo><msup><mi>x</mi><mo>+</mo></msup><mo>−</mo><msup><mi>x</mi><mo>−</mo></msup></mrow><annotation encoding="application/x-tex">\Delta=x^+-x^-</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>Δ</mi><mi>⊤</mi></msup><msup><mi>M</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msup><mi>p</mi><mo>−</mo></msup><mo>≥</mo><mn>0</mn><mo>,</mo><mspace width="2.0em"></mspace><msup><mi>Δ</mi><mi>⊤</mi></msup><msup><mi>M</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msup><mi>p</mi><mo>+</mo></msup><mo>≥</mo><mn>0</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">\Delta^\top M^{-1}p^-\ge0,\qquad \Delta^\top M^{-1}p^+\ge0.</annotation></semantics></math></p>
+<p>Failure of a condition suggests turning back. Actual NUTS algorithms
+use a trajectory tree, internal stopping checks, and carefully designed
+state-selection rules. Stopping ordinary HMC at an arbitrary
+state-dependent time and returning its endpoint is not automatically
+valid [5].</p>
+<p><strong>Numerical example.</strong> In the scalar quadratic example
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">M=1</annotation></semantics></math>,
+exact trajectories oscillate with angular frequency
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mn>5</mn></msqrt><annotation encoding="application/x-tex">\sqrt5</annotation></semantics></math>
+and period
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi><mi>/</mi><msqrt><mn>5</mn></msqrt><mo>≈</mo><mn>2.81</mn></mrow><annotation encoding="application/x-tex">2\pi/\sqrt5\approx2.81</annotation></semantics></math>.
+Starting at the mean with positive momentum, the first turning point
+occurs at time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><msqrt><mn>5</mn></msqrt><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><mn>0.702</mn></mrow><annotation encoding="application/x-tex">\pi/(2\sqrt5)\approx0.702</annotation></semantics></math>.
+A fixed integration time near a whole period can return close to the
+starting point. This illustrates the problem; it is not a formula for
+NUTS’s actual stopping time.</p>
+<p><strong>What problem does this solve?</strong> During warmup, modern
+implementations adapt step size and mass matrix. During sampling, the
+trajectory length still varies from iteration to iteration according to
+a fixed valid NUTS transition rule. State-dependent trajectory length is
+different from continuing unrestricted adaptation of tuning parameters
+[2, 5].</p>
+</section>
+<section id="why-stan-and-pymc-favor-hmcnuts" class="level2">
+<h2>5.3 Why Stan and PyMC favor HMC/NUTS</h2>
+<p><strong>Intuition.</strong> Smooth multivariate posteriors often have
+correlated, unevenly scaled geometry. Gradients guide longer moves, and
+mass-matrix adaptation improves global scaling. This usually extracts
+more information per retained draw than a simple isotropic random walk,
+although each iteration costs more.</p>
+<p><strong>Mathematics.</strong> A random walk with steps of scale
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+travels a root-mean-square distance of order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><msqrt><mi>n</mi></msqrt></mrow><annotation encoding="application/x-tex">s\sqrt n</annotation></semantics></math>
+after
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+uncorrelated increments. Along a well-resolved Hamiltonian trajectory,
+displacement initially accumulates coherently over many leapfrog steps,
+before curvature turns it around. This is a geometric explanation, not a
+universal complexity theorem.</p>
+<p><strong>Numerical example.</strong> In a correlated Gaussian target
+with correlation 0.99, exact two-coordinate Gibbs sampling has lag-1
+correlation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>0.99</mn><mn>2</mn></msup><mo>=</mo><mn>0.9801</mn></mrow><annotation encoding="application/x-tex">0.99^2=0.9801</annotation></semantics></math>
+for a coordinate observed once per complete sweep. Its integrated
+autocorrelation time is about</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mn>1</mn><mo>+</mo><mn>0.9801</mn></mrow><mrow><mn>1</mn><mo>−</mo><mn>0.9801</mn></mrow></mfrac><mo>≈</mo><mn>99.5</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">\frac{1+0.9801}{1-0.9801}\approx99.5.</annotation></semantics></math></p>
+<p>So 10,000 full sweeps provide only about 100 effective draws for that
+coordinate’s mean, despite every update being accepted. Geometry-aware
+methods and reparameterization can substantially improve this
+situation.</p>
+<p><strong>What problem does this solve?</strong> Stan uses NUTS by
+default; PyMC generally uses NUTS for compatible continuous
+differentiable models and offers other samplers for other cases [2, 6].
+Gradients do not solve every problem: discontinuities, discrete
+variables, funnels, separated modes, and expensive PDE derivatives can
+require different methods or substantial reformulation.</p>
+<p>A minimal PyMC version of the running example is:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymc <span class="im">as</span> pm</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> arviz <span class="im">as</span> az</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pm.Model() <span class="im">as</span> model:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> pm.Normal(<span class="st">&quot;x&quot;</span>, mu<span class="op">=</span><span class="fl">0.0</span>, sigma<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> pm.Normal(<span class="st">&quot;y&quot;</span>, mu<span class="op">=</span>x, sigma<span class="op">=</span><span class="fl">0.5</span>, observed<span class="op">=</span><span class="fl">2.0</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    idata <span class="op">=</span> pm.sample(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        draws<span class="op">=</span><span class="dv">2_000</span>, tune<span class="op">=</span><span class="dv">1_000</span>, chains<span class="op">=</span><span class="dv">4</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        random_seed<span class="op">=</span><span class="dv">42</span>, target_accept<span class="op">=</span><span class="fl">0.9</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(az.summary(idata, var_names<span class="op">=</span>[<span class="st">&quot;x&quot;</span>]))</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>az.plot_trace(idata, var_names<span class="op">=</span>[<span class="st">&quot;x&quot;</span>])</span></code></pre></div>
+<p><code>tune</code> specifies warmup draws, which are normally
+discarded. <code>target_accept=0.9</code> is an HMC/NUTS step-size
+tuning choice, not a statement that the resulting sample is reliable.
+Inspect the diagnostics. The PyMC example is supplied as an optional
+notebook section; PyMC is not required for the independently implemented
+and executed NumPy examples.</p>
+</section>
+<section id="bridge-to-function-space-bayesian-inverse-problems" class="level2">
+<h2>Bridge to function-space Bayesian inverse problems</h2>
+<p>For your research, an important next method is preconditioned
+Crank-Nicolson (pCN). It avoids starting from a fictitious
+infinite-dimensional Lebesgue density. For a Gaussian prior
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>0</mn></msub><mo>=</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>C</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_0=\mathcal N(0,C)</annotation></semantics></math>
+and posterior</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>d</mi><msup><mi>μ</mi><mi>y</mi></msup></mrow><mrow><mi>d</mi><msub><mi>μ</mi><mn>0</mn></msub></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>;</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">\frac{d\mu^y}{d\mu_0}(u)\propto e^{-\Phi(u;y)},</annotation></semantics></math></p>
+<p>the proposal</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>β</mi><mn>2</mn></msup></mrow></msqrt><mspace width="0.167em"></mspace><mi>u</mi><mo>+</mo><mi>β</mi><mi>ξ</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>ξ</mi><mo>∼</mo><msub><mi>μ</mi><mn>0</mn></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">v=\sqrt{1-\beta^2}\,u+\beta\xi,\qquad \xi\sim\mu_0,</annotation></semantics></math></p>
+<p>is reversible with respect to the prior. Its acceptance probability
+is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>min</mo><mo stretchy="false" form="prefix">{</mo><mn>1</mn><mo>,</mo><msup><mi>e</mi><mrow><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>;</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>v</mi><mo>;</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">\alpha(u,v)=\min\{1,e^{\Phi(u;y)-\Phi(v;y)}\}.</annotation></semantics></math></p>
+<p>For example,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\Phi(u)=3</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>3.7</mn></mrow><annotation encoding="application/x-tex">\Phi(v)=3.7</annotation></semantics></math>
+give acceptance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mn>0.7</mn></mrow></msup><mo>≈</mo><mn>0.497</mn></mrow><annotation encoding="application/x-tex">e^{-0.7}\approx0.497</annotation></semantics></math>.
+If the likelihood is constant, every proposal is accepted and the
+Gaussian prior is invariant. This gives a direct connection between MH
+and continuum Bayesian inverse problems. Prior preservation addresses a
+key source of mesh-refinement deterioration; it does not guarantee fast
+mixing for every likelihood [7].</p>
+<p>The downloadable examples include pCN for a Gaussian inverse problem
+with coordinate-dependent prior variances, allowing comparison against
+exact posterior moments.</p>
+</section>
+</section>
+<section id="part-6-the-bayesian-inverse-problem-workflow-80-87-minutes" class="level1">
+<h1>Part 6: The Bayesian inverse problem workflow (80-87 minutes)</h1>
+<section id="construct-the-likelihood-from-the-observation-model" class="level2">
+<h2>6.1 Construct the likelihood from the observation model</h2>
+<p><strong>Intuition.</strong> A forward map predicts measurements,
+while a noise model describes how observations fluctuate around those
+predictions. The likelihood connects the observed data to possible
+unknowns.</p>
+<p><strong>Mathematics.</strong> For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><msub><mi>𝒢</mi><mi>h</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>η</mi></mrow><annotation encoding="application/x-tex">y=\mathcal G_h(u)+\eta</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>Γ</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\eta\sim\mathcal N(0,\Gamma)</annotation></semantics></math>
+independent of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+and fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Φ</mi><mi>h</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>;</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>−</mo><msub><mi>𝒢</mi><mi>h</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>⊤</mi></msup><msup><mi>Γ</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>−</mo><msub><mi>𝒢</mi><mi>h</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>π</mi><mi>h</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>∣</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>Φ</mi><mi>h</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>;</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><msub><mi>π</mi><mn>0</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\Phi_h(u;y)=\tfrac12(y-\mathcal G_h(u))^\top\Gamma^{-1}(y-\mathcal G_h(u)),\qquad
+\pi_h(u\mid y)\propto e^{-\Phi_h(u;y)}\pi_0(u).</annotation></semantics></math></p>
+<p>The subscript
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+identifies a numerical forward approximation. Terms constant in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+can be omitted for MH. If a covariance depends on sampled parameters,
+its log determinant generally cannot be dropped.</p>
+<p><strong>Numerical example.</strong> Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>u</mi><mn>1</mn></msub><mo>,</mo><msub><mi>u</mi><mn>2</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>I</mi><mn>2</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">u=(u_1,u_2)\sim\mathcal N(0,I_2)</annotation></semantics></math>
+and observe
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><msub><mi>u</mi><mn>2</mn></msub><mo>+</mo><mi>η</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=u_1+u_2+\eta=1</annotation></semantics></math>
+with noise standard deviation 0.1. The log target, up to a constant,
+is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>ℓ</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>−</mi><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>u</mi><mn>1</mn><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>u</mi><mn>2</mn><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mn>50</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>u</mi><mn>1</mn></msub><mo>−</mo><msub><mi>u</mi><mn>2</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">\ell(u)=-\tfrac12(u_1^2+u_2^2)-50(1-u_1-u_2)^2.</annotation></semantics></math></p>
+<p>Both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.5</mn><mo>,</mo><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(0.5,0.5)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1,0)</annotation></semantics></math>
+fit the datum exactly; the prior assigns them different densities.</p>
+<p><strong>What problem does this solve?</strong> It turns a
+deterministic forward model plus uncertainty assumptions into a
+probability distribution that an MCMC algorithm can target. Incorrect
+noise scaling changes the posterior itself; a better sampler cannot fix
+it.</p>
+</section>
+<section id="sample-the-posterior-and-validate-on-a-solvable-case" class="level2">
+<h2>6.2 Sample the posterior and validate on a solvable case</h2>
+<p><strong>Intuition.</strong> Use MCMC to explore all plausible
+unknowns consistent with the prior and data. Begin with a problem whose
+exact answer is available, then replace the forward map by the nonlinear
+or PDE model.</p>
+<p><strong>Mathematics.</strong> For a linear forward map
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+and Gaussian prior
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>m</mi><mn>0</mn></msub><mo>,</mo><msub><mi>C</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal N(m_0,C_0)</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>C</mi><mn>0</mn><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><mo>+</mo><msup><mi>A</mi><mi>⊤</mi></msup><msup><mi>Γ</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>,</mo><mspace width="2.0em"></mspace><mi>m</mi><mo>=</mo><mi>C</mi><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>C</mi><mn>0</mn><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>m</mi><mn>0</mn></msub><mo>+</mo><msup><mi>A</mi><mi>⊤</mi></msup><msup><mi>Γ</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">C=(C_0^{-1}+A^\top\Gamma^{-1}A)^{-1},\qquad
+m=C(C_0^{-1}m_0+A^\top\Gamma^{-1}y).</annotation></semantics></math></p>
+<p>For the numerical example,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">A=(1,1)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Γ</mi><mo>=</mo><mn>0.01</mn></mrow><annotation encoding="application/x-tex">\Gamma=0.01</annotation></semantics></math>
+give</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mfrac><mn>1</mn><mn>2.01</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>C</mi><mo>=</mo><msub><mi>I</mi><mn>2</mn></msub><mo>−</mo><mfrac><mn>1</mn><mn>2.01</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">m=\frac1{2.01}\begin{pmatrix}1\\1\end{pmatrix},\qquad
+C=I_2-\frac1{2.01}\begin{pmatrix}1&amp;1\\1&amp;1\end{pmatrix}.</annotation></semantics></math></p>
+<p><strong>Numerical example.</strong> Each posterior mean is
+approximately 0.4975. The covariance is approximately</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>0.50249</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>0.49751</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>0.49751</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0.50249</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">C=\begin{pmatrix}0.50249&amp;-0.49751\\-0.49751&amp;0.50249\end{pmatrix}.</annotation></semantics></math></p>
+<p>The correlation is approximately -0.9901: the posterior is a narrow
+ridge. An isotropic random walk must respect the narrow direction and
+may move slowly along the ridge. Whitening or an appropriately chosen
+proposal covariance directly addresses this geometry.</p>
+<p><strong>What problem does this solve?</strong> It checks that the
+likelihood and sampler jointly recover the intended posterior. Agreement
+should be judged relative to estimated Monte Carlo error, not arbitrary
+decimal tolerances. In a PDE problem, HMC uses gradients of the
+implemented discretized potential; these often require adjoint
+calculations, while RWM and pCN require only potential evaluations.</p>
+</section>
+<section id="turn-posterior-draws-into-uncertainty-quantification" class="level2">
+<h2>6.3 Turn posterior draws into uncertainty quantification</h2>
+<p><strong>Intuition.</strong> The data can determine some combinations
+of parameters accurately while leaving others uncertain. Analyze the
+quantities relevant to the scientific question, rather than only
+plotting individual parameter marginals.</p>
+<p><strong>Mathematics.</strong> For a quantity of interest
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">q(u)</annotation></semantics></math>
+and posterior draws
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup><annotation encoding="application/x-tex">u^{(n)}</annotation></semantics></math>,
+compute</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>𝔼</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">[</mo><mi>q</mi><mo>∣</mo><mi>y</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munder><mo>∑</mo><mi>n</mi></munder><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mover><mi>ℙ</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo>&gt;</mo><mi>c</mi><mo>∣</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munder><mo>∑</mo><mi>n</mi></munder><msub><mn>𝟏</mn><mrow><mo stretchy="false" form="prefix">{</mo><mi>q</mi><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>&gt;</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">\widehat{\mathbb E}[q\mid y]=\frac1N\sum_n q(u^{(n)}),\qquad
+\widehat{\mathbb P}(q&gt;c\mid y)=\frac1N\sum_n\mathbf1_{\{q(u^{(n)})&gt;c\}}.</annotation></semantics></math></p>
+<p>Empirical quantiles estimate credible intervals. To sample a future
+noisy observation, draw
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>η</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">\eta^{(n)}_{\mathrm{new}}</annotation></semantics></math>
+from the observation-noise model and set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>y</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><mo>=</mo><msub><mi>𝒢</mi><mi>h</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msubsup><mi>η</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo stretchy="true" form="postfix">)</mo></mrow></msubsup></mrow><annotation encoding="application/x-tex">y^{(n)}_{\mathrm{new}}=\mathcal G_h(u^{(n)})+\eta^{(n)}_{\mathrm{new}}</annotation></semantics></math>.</p>
+<p><strong>Numerical example.</strong> For the two-parameter
+problem,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><msub><mi>u</mi><mn>2</mn></msub><mo>∣</mo><mi>y</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>≈</mo><mn>0.9950</mn><mo>,</mo><mspace width="2.0em"></mspace><mo>Var</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><msub><mi>u</mi><mn>2</mn></msub><mo>∣</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><mn>0.00995</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathbb E[u_1+u_2\mid y]\approx0.9950,\qquad
+\operatorname{Var}(u_1+u_2\mid y)\approx0.00995,</annotation></semantics></math></p>
+<p>whereas
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mn>1</mn></msub><mo>−</mo><msub><mi>u</mi><mn>2</mn></msub><mo>∣</mo><mi>y</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">u_1-u_2\mid y\sim\mathcal N(0,2)</annotation></semantics></math>
+remains unchanged from the prior. The next noisy measurement of the sum
+has predictive variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.00995</mn><mo>+</mo><mn>0.01</mn><mo>≈</mo><mn>0.01995</mn></mrow><annotation encoding="application/x-tex">0.00995+0.01\approx0.01995</annotation></semantics></math>.</p>
+<p><strong>What problem does this solve?</strong> It separates
+identifiable scientific information from unresolved directions and
+converts posterior samples into means, credible intervals, event
+probabilities, and predictions. Each reported quantity needs its own
+accuracy assessment. More MCMC reduces simulation error; better data or
+modeling changes posterior uncertainty; mesh refinement addresses
+forward-approximation error.</p>
+</section>
+</section>
+<section id="a-one-page-summary" class="level1">
+<h1>A one-page summary</h1>
+<p><strong>Goal.</strong> Compute
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>=</mo><mo>∫</mo><mi>f</mi><mspace width="0.167em"></mspace><mi>d</mi><mi>π</mi></mrow><annotation encoding="application/x-tex">I=\int f\,d\pi</annotation></semantics></math>
+for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>Z</mi></mrow><annotation encoding="application/x-tex">\pi(x)=\widetilde\pi(x)/Z</annotation></semantics></math>,
+often with unknown
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+and no direct sampler.</p>
+<p><strong>Monte Carlo.</strong> If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>i</mi></msub><annotation encoding="application/x-tex">X_i</annotation></semantics></math>
+are IID from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>,
+estimate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>
+by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>N</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>∑</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">N^{-1}\sum f(X_i)</annotation></semantics></math>.
+The strong law gives consistency; a finite-variance CLT gives MCSE about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>s</mi><mi>f</mi></msub><mi>/</mi><msqrt><mi>N</mi></msqrt></mrow><annotation encoding="application/x-tex">s_f/\sqrt N</annotation></semantics></math>.
+Four times as many independent draws halves the error. Posterior spread
+describes uncertainty about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>;
+MCSE describes numerical uncertainty about an estimated integral.</p>
+<p><strong>Importance sampling.</strong> Draw from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+and use weights
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo>=</mo><mover><mi>π</mi><mo accent="true">̃</mo></mover><mi>/</mi><mi>q</mi></mrow><annotation encoding="application/x-tex">w=\widetilde\pi/q</annotation></semantics></math>.
+Estimate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>
+by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∑</mo><mi>w</mi><mi>f</mi><mi>/</mi><mo>∑</mo><mi>w</mi></mrow><annotation encoding="application/x-tex">\sum wf/\sum w</annotation></semantics></math>.
+It avoids knowing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+but can suffer severe weight degeneracy. A support mismatch cannot be
+repaired by more weighting.</p>
+<p><strong>Markov chains.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(x,A)</annotation></semantics></math>
+specifies the next-state distribution. Invariance is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mi>P</mi><mo>=</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi P=\pi</annotation></semantics></math>.
+Detailed balance,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>d</mi><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo>,</mo><mi>d</mi><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi(dx)P(x,dz)=\pi(dz)P(z,dx)</annotation></semantics></math>,
+is one sufficient route to invariance. Ergodicity supplies long-run
+exploration and a law of large numbers under the relevant conditions.
+Invariance, convergence, and efficiency are different requirements.</p>
+<p><strong>Algorithms.</strong> Metropolis accepts symmetric proposals
+with probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>min</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\min(1,\widetilde\pi(z)/\widetilde\pi(x))</annotation></semantics></math>.
+MH includes the reverse/forward proposal ratio. Gibbs samples full
+conditional distributions. HMC augments with momentum, integrates
+Hamiltonian dynamics using leapfrog, and corrects integration error.
+NUTS selects a valid variable-length Hamiltonian trajectory
+automatically.</p>
+<p><strong>Dependent-sample error.</strong> For a suitable stationary
+chain,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>τ</mi><mi>f</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mn>2</mn><msub><mo>∑</mo><mrow><mi>k</mi><mo>≥</mo><mn>1</mn></mrow></msub><msub><mi>ρ</mi><mi>f</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tau_f=1+2\sum_{k\ge1}\rho_f(k)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>ESS</mo><mi>f</mi></msub><mo>≈</mo><mi>N</mi><mi>/</mi><msub><mi>τ</mi><mi>f</mi></msub></mrow><annotation encoding="application/x-tex">\operatorname{ESS}_f\approx N/\tau_f</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>MCSE</mo><mo>≈</mo><msub><mi>s</mi><mi>f</mi></msub><mi>/</mi><msqrt><msub><mo>ESS</mo><mi>f</mi></msub></msqrt></mrow><annotation encoding="application/x-tex">\operatorname{MCSE}\approx s_f/\sqrt{\operatorname{ESS}_f}</annotation></semantics></math>.
+ESS depends on the estimand and can exceed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+under negative correlation. A CLT requires assumptions beyond an
+LLN.</p>
+<p><strong>Practice.</strong> Use log densities; retain rejected states;
+run multiple chains; use warmup for initialization and tuning. Inspect
+traces, rank-based split
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>R</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\widehat R</annotation></semantics></math>,
+bulk/tail ESS, and sampler warnings. Typical screening includes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>R</mi><mo accent="true">̂</mo></mover><mo>&lt;</mo><mn>1.01</mn></mrow><annotation encoding="application/x-tex">\widehat R&lt;1.01</annotation></semantics></math>,
+but no finite diagnostic proves convergence. High acceptance does not
+imply efficient exploration. Compare ESS per time or solver cost. Extend
+runs to meet an MCSE target only after addressing exploration failures.
+Routine thinning is usually wasteful.</p>
+<p><strong>For inverse problems.</strong> Distinguish MCMC error,
+forward/discretization error, and model error. HMC may need adjoint
+gradients; pCN preserves a Gaussian reference prior and provides a
+natural path into function-space MCMC.</p>
+</section>
+<section id="concept-map" class="level1">
+<h1>Concept map</h1><svg width="419pt" height="543pt"
+ viewBox="0.00 0.00 419.18 542.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 528.4)">
+<title>G</title>
+<polygon fill="white" stroke="transparent" points="-14.4,14.4 -14.4,-528.4 404.78,-528.4 404.78,14.4 -14.4,14.4"/>
+<!-- A -->
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M197,-514C197,-514 51,-514 51,-514 45,-514 39,-508 39,-502 39,-502 39,-490 39,-490 39,-484 45,-478 51,-478 51,-478 197,-478 197,-478 203,-478 209,-484 209,-490 209,-490 209,-502 209,-502 209,-508 203,-514 197,-514"/>
+<text text-anchor="middle" x="124" y="-493.2" font-family="Helvetica,sans-Serif" font-size="11.00">Posterior up to a constant</text>
+</g>
+<!-- B -->
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M194.5,-447C194.5,-447 53.5,-447 53.5,-447 47.5,-447 41.5,-441 41.5,-435 41.5,-435 41.5,-423 41.5,-423 41.5,-417 47.5,-411 53.5,-411 53.5,-411 194.5,-411 194.5,-411 200.5,-411 206.5,-417 206.5,-423 206.5,-423 206.5,-435 206.5,-435 206.5,-441 200.5,-447 194.5,-447"/>
+<text text-anchor="middle" x="124" y="-426.2" font-family="Helvetica,sans-Serif" font-size="11.00">MH, Gibbs, HMC or NUTS</text>
+</g>
+<!-- A&#45;&gt;B -->
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#657f90" d="M124,-477.92C124,-470.52 124,-461.72 124,-453.7"/>
+<polygon fill="#657f90" stroke="#657f90" points="126.28,-453.69 124,-447.19 121.73,-453.69 126.28,-453.69"/>
+</g>
+<!-- C -->
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M170.5,-380C170.5,-380 77.5,-380 77.5,-380 71.5,-380 65.5,-374 65.5,-368 65.5,-368 65.5,-356 65.5,-356 65.5,-350 71.5,-344 77.5,-344 77.5,-344 170.5,-344 170.5,-344 176.5,-344 182.5,-350 182.5,-356 182.5,-356 182.5,-368 182.5,-368 182.5,-374 176.5,-380 170.5,-380"/>
+<text text-anchor="middle" x="124" y="-359.2" font-family="Helvetica,sans-Serif" font-size="11.00">Transition kernel</text>
+</g>
+<!-- B&#45;&gt;C -->
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#657f90" d="M124,-410.92C124,-403.52 124,-394.72 124,-386.7"/>
+<polygon fill="#657f90" stroke="#657f90" points="126.28,-386.69 124,-380.19 121.73,-386.69 126.28,-386.69"/>
+</g>
+<!-- D -->
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M195,-313C195,-313 53,-313 53,-313 47,-313 41,-307 41,-301 41,-301 41,-289 41,-289 41,-283 47,-277 53,-277 53,-277 195,-277 195,-277 201,-277 207,-283 207,-289 207,-289 207,-301 207,-301 207,-307 201,-313 195,-313"/>
+<text text-anchor="middle" x="124" y="-292.2" font-family="Helvetica,sans-Serif" font-size="11.00">Invariance and ergodicity</text>
+</g>
+<!-- C&#45;&gt;D -->
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#657f90" d="M124,-343.92C124,-336.52 124,-327.72 124,-319.7"/>
+<polygon fill="#657f90" stroke="#657f90" points="126.28,-319.69 124,-313.19 121.73,-319.69 126.28,-319.69"/>
+</g>
+<!-- E -->
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M173.5,-246C173.5,-246 74.5,-246 74.5,-246 68.5,-246 62.5,-240 62.5,-234 62.5,-234 62.5,-222 62.5,-222 62.5,-216 68.5,-210 74.5,-210 74.5,-210 173.5,-210 173.5,-210 179.5,-210 185.5,-216 185.5,-222 185.5,-222 185.5,-234 185.5,-234 185.5,-240 179.5,-246 173.5,-246"/>
+<text text-anchor="middle" x="124" y="-225.2" font-family="Helvetica,sans-Serif" font-size="11.00">Dependent draws</text>
+</g>
+<!-- D&#45;&gt;E -->
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#657f90" d="M124,-276.92C124,-269.52 124,-260.72 124,-252.7"/>
+<polygon fill="#657f90" stroke="#657f90" points="126.28,-252.69 124,-246.19 121.73,-252.69 126.28,-252.69"/>
+</g>
+<!-- F -->
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M118,-36C118,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 118,0 118,0 124,0 130,-6 130,-12 130,-12 130,-24 130,-24 130,-30 124,-36 118,-36"/>
+<text text-anchor="middle" x="65" y="-15.2" font-family="Helvetica,sans-Serif" font-size="11.00">Posterior averages</text>
+</g>
+<!-- E&#45;&gt;F -->
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#657f90" d="M83.89,-209.78C71.38,-202.26 59.02,-192.11 52,-179 28.58,-135.23 44.04,-74.91 55.62,-42.26"/>
+<polygon fill="#657f90" stroke="#657f90" points="57.77,-43 57.87,-36.11 53.5,-41.43 57.77,-43"/>
+</g>
+<!-- G -->
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M171.5,-179C171.5,-179 76.5,-179 76.5,-179 70.5,-179 64.5,-173 64.5,-167 64.5,-167 64.5,-155 64.5,-155 64.5,-149 70.5,-143 76.5,-143 76.5,-143 171.5,-143 171.5,-143 177.5,-143 183.5,-149 183.5,-155 183.5,-155 183.5,-167 183.5,-167 183.5,-173 177.5,-179 171.5,-179"/>
+<text text-anchor="middle" x="124" y="-158.2" font-family="Helvetica,sans-Serif" font-size="11.00">Traces and R hat</text>
+</g>
+<!-- E&#45;&gt;G -->
+<g id="edge6" class="edge">
+<title>E&#45;&gt;G</title>
+<path fill="none" stroke="#657f90" d="M124,-209.92C124,-202.52 124,-193.72 124,-185.7"/>
+<polygon fill="#657f90" stroke="#657f90" points="126.28,-185.69 124,-179.19 121.73,-185.69 126.28,-185.69"/>
+</g>
+<!-- H -->
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M355.5,-179C355.5,-179 220.5,-179 220.5,-179 214.5,-179 208.5,-173 208.5,-167 208.5,-167 208.5,-155 208.5,-155 208.5,-149 214.5,-143 220.5,-143 220.5,-143 355.5,-143 355.5,-143 361.5,-143 367.5,-149 367.5,-155 367.5,-155 367.5,-167 367.5,-167 367.5,-173 361.5,-179 355.5,-179"/>
+<text text-anchor="middle" x="288" y="-158.2" font-family="Helvetica,sans-Serif" font-size="11.00">Autocorrelation and ESS</text>
+</g>
+<!-- E&#45;&gt;H -->
+<g id="edge7" class="edge">
+<title>E&#45;&gt;H</title>
+<path fill="none" stroke="#657f90" d="M167.09,-209.92C189.04,-201.22 215.82,-190.61 238.6,-181.58"/>
+<polygon fill="#657f90" stroke="#657f90" points="239.71,-183.59 244.91,-179.08 238.03,-179.36 239.71,-183.59"/>
+</g>
+<!-- G&#45;&gt;B -->
+<g id="edge10" class="edge">
+<title>G&#45;&gt;B</title>
+<path fill="none" stroke="#657f90" d="M160.62,-179.1C173.98,-186.9 188.19,-197.26 198,-210 226.56,-247.09 228.31,-266.93 220,-313 214.35,-344.28 214.66,-355.02 195,-380 186.54,-390.75 175,-399.97 163.68,-407.37"/>
+<polygon fill="#657f90" stroke="#657f90" points="162.43,-405.47 158.15,-410.86 164.86,-409.32 162.43,-405.47"/>
+<text text-anchor="middle" x="272.5" y="-292.8" font-family="Helvetica,sans-Serif" font-size="9.00">Exploration problems</text>
+</g>
+<!-- I -->
+<g id="node9" class="node">
+<title>I</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M318,-112C318,-112 218,-112 218,-112 212,-112 206,-106 206,-100 206,-100 206,-88 206,-88 206,-82 212,-76 218,-76 218,-76 318,-76 318,-76 324,-76 330,-82 330,-88 330,-88 330,-100 330,-100 330,-106 324,-112 318,-112"/>
+<text text-anchor="middle" x="268" y="-91.2" font-family="Helvetica,sans-Serif" font-size="11.00">Monte Carlo error</text>
+</g>
+<!-- H&#45;&gt;I -->
+<g id="edge8" class="edge">
+<title>H&#45;&gt;I</title>
+<path fill="none" stroke="#657f90" d="M282.75,-142.92C280.47,-135.52 277.76,-126.72 275.29,-118.7"/>
+<polygon fill="#657f90" stroke="#657f90" points="277.38,-117.73 273.29,-112.19 273.03,-119.07 277.38,-117.73"/>
+</g>
+<!-- I&#45;&gt;F -->
+<g id="edge9" class="edge">
+<title>I&#45;&gt;F</title>
+<path fill="none" stroke="#657f90" d="M221.17,-75.93C190.44,-64.73 150.17,-50.05 118.22,-38.4"/>
+<polygon fill="#657f90" stroke="#657f90" points="118.83,-36.2 111.94,-36.11 117.27,-40.48 118.83,-36.2"/>
+</g>
+<!-- J -->
+<g id="node10" class="node">
+<title>J</title>
+<path fill="#eef5f9" stroke="#b8ccd8" d="M349,-36C349,-36 187,-36 187,-36 181,-36 175,-30 175,-24 175,-24 175,-12 175,-12 175,-6 181,0 187,0 187,0 349,0 349,0 355,0 361,-6 361,-12 361,-12 361,-24 361,-24 361,-30 355,-36 349,-36"/>
+<text text-anchor="middle" x="268" y="-15.2" font-family="Helvetica,sans-Serif" font-size="11.00">Longer run or better sampler</text>
+</g>
+<!-- I&#45;&gt;J -->
+<g id="edge11" class="edge">
+<title>I&#45;&gt;J</title>
+<path fill="none" stroke="#657f90" d="M267.36,-75.73C267.21,-70.96 267.07,-65.78 267,-61 266.91,-55.13 266.97,-48.8 267.11,-42.88"/>
+<polygon fill="#657f90" stroke="#657f90" points="269.38,-42.72 267.29,-36.16 264.84,-42.6 269.38,-42.72"/>
+<text text-anchor="middle" x="314.5" y="-53.8" font-family="Helvetica,sans-Serif" font-size="9.00">Insufficient precision</text>
+</g>
+<!-- J&#45;&gt;B -->
+<g id="edge12" class="edge">
+<title>J&#45;&gt;B</title>
+<path fill="none" stroke="#657f90" d="M345.63,-36.17C352.53,-40.13 358.84,-45.01 364,-51 401.4,-94.45 390.73,-122.68 380,-179 368.01,-241.91 367.57,-263.45 327,-313 289.14,-359.25 227.48,-390.39 182.03,-408.47"/>
+<polygon fill="#657f90" stroke="#657f90" points="180.96,-406.45 175.73,-410.94 182.62,-410.69 180.96,-406.45"/>
+</g>
+</g>
+</svg>
+
+<p>The map follows the posterior-sampling workflow and its feedback
+loop. In the notebook, the same relationships are available as a
+rendered diagram.</p>
+
+<p>Detailed balance is a sufficient route to the invariance requirement.
+Warmup and parameterization influence the transition kernel. Diagnostics
+assess the finite output; they do not replace correctness arguments.</p>
+</section>
+<section id="five-exercises-of-increasing-difficulty" class="level1">
+<h1>Five exercises of increasing difficulty</h1>
+<section id="exercise-1-iid-monte-carlo-and-uncertainty-10-minutes" class="level2">
+<h2>Exercise 1: IID Monte Carlo and uncertainty (10 minutes)</h2>
+<p>Draw
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>100</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>000</mn><mo>,</mo><mn>10</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">N=100,1,000,10,000</annotation></semantics></math>
+independent samples from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1.6</mn><mo>,</mo><mn>0.2</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal N(1.6,0.2)</annotation></semantics></math>.
+For each
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>,
+estimate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mi>X</mi></mrow><annotation encoding="application/x-tex">\mathbb EX</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo>&gt;</mo><mn>2</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbb P(X&gt;2)</annotation></semantics></math>,
+with MCSEs. Repeat each experiment 200 times and check the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>N</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">N^{-1/2}</annotation></semantics></math>
+scaling. Distinguish a posterior credible interval for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+from a Monte Carlo interval for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mi>X</mi></mrow><annotation encoding="application/x-tex">\mathbb EX</annotation></semantics></math>.</p>
+<p><em>Checks:</em> the exact mean is 1.6; the event probability is
+about 0.18555; the indicator variance is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(1-p)</annotation></semantics></math>.</p>
+</section>
+<section id="exercise-2-prove-a-finite-state-mh-sampler-correct-15-minutes" class="level2">
+<h2>Exercise 2: Prove a finite-state MH sampler correct (15
+minutes)</h2>
+<p>Use
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.2</mn><mo>,</mo><mn>0.8</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi=(0.2,0.8)</annotation></semantics></math>
+and proposal matrix</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>0.1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0.9</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0.3</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0.7</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">Q=\begin{pmatrix}0.1&amp;0.9\\0.3&amp;0.7\end{pmatrix}.</annotation></semantics></math></p>
+<p>Derive every entry of the MH transition matrix, verify detailed
+balance, and check that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mi>P</mi><mo>=</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi P=\pi</annotation></semantics></math>.
+Simulate it. Then omit the Hastings factor and compute the resulting
+stationary distribution.</p>
+<p><em>Checks:</em> the correct off-diagonal entries are 0.9 and 0.225.
+Without the correction they become 0.9 and 0.075, yielding stationary
+probabilities
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>13</mn><mo>,</mo><mn>12</mn><mi>/</mi><mn>13</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1/13,12/13)</annotation></semantics></math>.</p>
+</section>
+<section id="exercise-3-implement-tune-and-diagnose-rwm-25-minutes" class="level2">
+<h2>Exercise 3: Implement, tune, and diagnose RWM (25 minutes)</h2>
+<p>Run four chains for the scalar inverse problem, with proposal scales
+0.05, 1, and 5. Keep all post-warmup states. Compare acceptance, traces,
+posterior moments, MCSE, and ESS per second. Evaluate both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">f(x)=x</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mn>𝟏</mn><mrow><mo stretchy="false" form="prefix">{</mo><mi>x</mi><mo>&gt;</mo><mn>2</mn><mo stretchy="false" form="postfix">}</mo></mrow></msub></mrow><annotation encoding="application/x-tex">f(x)=\mathbf1_{\{x&gt;2\}}</annotation></semantics></math>.
+Explain why selecting the highest acceptance is a poor rule. Compare
+your Monte Carlo errors against exact answers relative to their
+estimated MCSEs.</p>
+<p><em>Extension:</em> intentionally keep accepted states only and
+demonstrate the resulting bias.</p>
+</section>
+<section id="exercise-4-derive-and-observe-slow-gibbs-sampling-30-minutes" class="level2">
+<h2>Exercise 4: Derive and observe slow Gibbs sampling (30 minutes)</h2>
+<p>Implement systematic two-coordinate Gibbs sampling for a centered
+bivariate Gaussian with unit marginal variances and correlations
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>0.9</mn><mo>,</mo><mn>0.99</mn></mrow><annotation encoding="application/x-tex">\rho=0,0.9,0.99</annotation></semantics></math>.
+Show that one coordinate observed once per full sweep has AR(1)
+coefficient
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ρ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\rho^2</annotation></semantics></math>.
+Derive its integrated autocorrelation time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">(1+\rho^2)/(1-\rho^2)</annotation></semantics></math>
+and compare with simulations. Then whiten the target and repeat.</p>
+<p><em>Checks:</em> the theoretical autocorrelation times are 1, about
+9.53, and about 99.50. Explain why all conditional updates being
+accepted says little about efficiency.</p>
+</section>
+<section id="exercise-5-construct-and-validate-hmc-45-60-minutes" class="level2">
+<h2>Exercise 5: Construct and validate HMC (45-60 minutes)</h2>
+<p>Implement fixed-length HMC for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mo>=</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>m</mi><mo>,</mo><mi>C</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi=\mathcal N(m,C)</annotation></semantics></math>
+with non-diagonal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>,
+using
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>−</mo><mi>m</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>⊤</mi></msup><msup><mi>C</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>−</mo><mi>m</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">U(x)=\tfrac12(x-m)^\top C^{-1}(x-m)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∇</mi><mi>U</mi><mo>=</mo><msup><mi>C</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>−</mo><mi>m</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\nabla U=C^{-1}(x-m)</annotation></semantics></math>.
+Refresh momentum, apply leapfrog, flip the final momentum, and perform
+the energy-based MH step. Check leapfrog reversibility numerically. Vary
+step size and integration time; compare posterior moments and ESS per
+gradient evaluation against RWM. Investigate near-periodic integration
+lengths and one strongly ill-conditioned covariance. Explain how NUTS
+helps with trajectory length and what problems it does not solve.</p>
+<p><em>Checks:</em> exact mean is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>,
+exact covariance is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>.
+A valid Metropolis correction removes invariant-measure bias due to
+finite leapfrog step size in exact arithmetic, under the usual support
+assumptions; finite-run and floating-point errors still remain. This is
+not a guarantee that a poorly tuned chain mixes adequately.</p>
+</section>
+</section>
+<details><summary>Exercise 1 solution</summary><p>For the mean, MCSE = sqrt(0.2/N). For the exceedance probability, p = 1 − Φ((2−1.6)/sqrt(0.2)) ≈ 0.18555 and MCSE ≈ sqrt(p(1−p)/N). Increasing N tenfold reduces standard error by sqrt(10). A posterior interval describes X; a Monte Carlo interval describes numerical uncertainty in its estimated expectation.</p></details><details><summary>Exercise 2 solution</summary><p>The correct transition matrix is [[0.1,0.9],[0.225,0.775]]. Equilibrium off-diagonal flows both equal 0.18. Without the proposal correction, the reverse transition becomes 0.075, giving stationary probabilities (1/13,12/13).</p></details><details><summary>Exercise 3 guidance</summary><p>Retain rejected states and compare the mean and exceedance indicator separately. Small proposals can accept almost always while moving slowly. Keeping accepted states alone overrepresents states with higher probability of departure. Compare actual errors with MCSE only after assessing exploration.</p></details><details><summary>Exercise 4 solution</summary><p>Substitute the first conditional update into the second: X2,new = ρ² X2,old + ρ sqrt(1−ρ²) ξ1 + sqrt(1−ρ²) ξ2. The innovation variance is 1−ρ⁴. Hence the lag-k correlation is ρ^(2k), and τ = (1+ρ²)/(1−ρ²).</p></details><details><summary>Exercise 5 guidance</summary><p>Use gradient C⁻¹(x−m). Leapfrog followed by momentum reversal is an involution up to floating-point error. Accept using the difference in total Hamiltonian. Check mean AND covariance: nearly periodic trajectories can estimate some quantities well and others poorly. Compare cost per effective draw, including all gradient evaluations.</p></details><section id="a-short-path-into-research-papers" class="level1">
+<h1>A short path into research papers</h1>
+<ol type="1">
+<li>Read the original MH acceptance argument and reconstruct the
+detailed-balance identity in Part 3.2 yourself. The finite-state
+exercise is a complete small version of that proof.</li>
+<li>Read Hoffman and Gelman on NUTS [5], after implementing fixed-length
+HMC. Identify precisely which trajectory-building and state-selection
+steps preserve the target.</li>
+<li>Read Vehtari et al. on modern diagnostics [3], paying attention to
+the difference between practical detection of failures and a proof of
+convergence.</li>
+<li>Read Cotter et al. [7] to connect the course to Gaussian-reference
+measures, pCN, and mesh-refinement behavior in Bayesian inverse
+problems.</li>
+</ol>
+</section>
+<section id="references-and-current-documentation" class="level1">
+<h1>References and current documentation</h1>
+<p>The mathematical examples in this course are derived for teaching.
+Software descriptions were checked against official documentation on 5
+November 2026.</p>
+<ol type="1">
+<li>Roberts, Gelman and Gilks (1997), <em>Weak convergence and optimal
+scaling of random walk Metropolis algorithms</em>, Annals of Applied
+Probability 7, 110-120. <a href="https://faculty.wcas.northwestern.edu/lchrist/course/Gerzensee_2011/The%20Annals%20of%20Applied%20Probability%201997%20Roberts.pdf">Author-hosted
+paper</a>.</li>
+<li>Stan Reference Manual, <a href="https://mc-stan.org/docs/reference-manual/mcmc.html">MCMC
+Sampling</a>.</li>
+<li>Vehtari, Gelman, Simpson, Carpenter and Burkner (2021),
+<em>Rank-normalization, folding, and localization: An improved R-hat for
+assessing convergence of MCMC</em>, Bayesian Analysis 16, 667-718. <a href="https://arxiv.org/abs/1903.08008">Paper</a>.</li>
+<li>Stan, <a href="https://mc-stan.org/learn-stan/diagnostics-warnings.html">How to
+diagnose and resolve convergence problems</a>.</li>
+<li>Hoffman and Gelman (2014), <em>The No-U-Turn Sampler: Adaptively
+Setting Path Lengths in Hamiltonian Monte Carlo</em>, JMLR 15,
+1593-1623. <a href="https://jmlr.org/papers/v15/hoffman14a.html">Paper</a>.</li>
+<li>PyMC, <a href="https://www.pymc.io/projects/docs/en/stable/api/generated/pymc.sample.html">sample
+documentation</a> and <a href="https://www.pymc.io/projects/docs/en/stable/api/generated/pymc.step_methods.hmc.NUTS.html">NUTS
+documentation</a>.</li>
+<li>Cotter, Roberts, Stuart and White (2013), <em>MCMC Methods for
+Functions: Modifying Old Algorithms to Make Them Faster</em>,
+Statistical Science 28, 424-446. <a href="https://arxiv.org/abs/1202.0709">Paper</a>.</li>
+</ol>
+</section>
+<script>let seed=42;function uniform(){seed=(1664525*seed+1013904223)>>>0;return(seed+.5)/4294967296}function normal(){return Math.sqrt(-2*Math.log(uniform()))*Math.cos(2*Math.PI*uniform())}function U(x){return 2.5*(x-1.6)**2}function propose(x,s,method,L){if(method==='rw'){let z=x+s*normal();return[z,U(x)-U(z)]}let p=normal(),p0=p,z=x;p-=s*2.5*(z-1.6);for(let j=0;j<L;j++){z+=s*p;if(j<L-1)p-=s*5*(z-1.6)}p-=s*2.5*(z-1.6);return[z,U(x)+p0*p0/2-U(z)-p*p/2]}
+if(typeof module!=='undefined')module.exports={propose,U};
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);let x=0,draws=[],accepted=0,last='Ready';
+function draw(){let n=draws.length,mean=n?draws.reduce((a,b)=>a+b,0)/n:NaN;$('stats').textContent=`${n} draws | accepted ${n?(100*accepted/n).toFixed(1):0}% | mean ${n?mean.toFixed(4):'—'} (exact 1.6000) | ${last}`;let c=$('trace').getContext('2d');c.clearRect(0,0,900,230);let vals=draws.slice(-1000),lo=Math.min(-1,...vals),hi=Math.max(4,...vals);let Y=v=>200-(v-lo)/(hi-lo)*170;c.fillStyle='#304e58';c.fillText('Trace • last 1,000 iterations',15,18);c.fillText(hi.toFixed(2),4,40);c.fillText(lo.toFixed(2),4,200);c.strokeStyle='#d88432';c.beginPath();c.moveTo(45,Y(1.6));c.lineTo(885,Y(1.6));c.stroke();c.strokeStyle='#187c90';c.beginPath();vals.forEach((v,i)=>{let px=45+840*i/Math.max(1,vals.length-1);i?c.lineTo(px,Y(v)):c.moveTo(px,Y(v))});c.stroke();c=$('hist').getContext('2d');c.clearRect(0,0,900,230);c.fillStyle='#304e58';c.fillText('Density histogram • all draws; tails outside [−1,4] not shown',15,18);let bins=Array(50).fill(0);draws.forEach(v=>{let i=Math.floor((v+1)*10);if(i>=0&&i<50)bins[i]++});let top=Math.max(1,...bins.map(v=>v/Math.max(1,n)/.1));c.fillStyle='#187c9080';bins.forEach((v,i)=>{let h=v/Math.max(1,n)/.1/top*170;c.fillRect(45+i*16.8,205-h,16,h)});c.strokeStyle='#d88432';c.lineWidth=2;c.beginPath();for(let i=0;i<=400;i++){let v=-1+5*i/400,d=Math.exp(-U(v))/Math.sqrt(2*Math.PI*.2),py=205-d/top*170;i?c.lineTo(45+840*i/400,py):c.moveTo(45,py)}c.stroke()}
+function reset(){seed=42;x=Number($('start').value);if(!Number.isFinite(x))x=0;draws=[];accepted=0;last='Reset';draw()}
+function advance(n){let s=Number($('scale').value),L=Math.max(1,Math.min(50,Number($('steps').value)||8));for(let i=0;i<n;i++){let[z,ratio]=propose(x,s,$('method').value,L),take=Number.isFinite(z)&&Number.isFinite(ratio)&&Math.log(uniform())<Math.min(0,ratio);if(take){x=z;accepted++}draws.push(x);last=take?'Last proposal accepted':'Last proposal rejected';}draw()}
+$('one').onclick=()=>advance(1);$('run').onclick=()=>advance(1000);$('reset').onclick=reset;['method','steps','start'].forEach(id=>$(id).onchange=reset);$('scale').oninput=()=>{$('scaleLabel').textContent=Number($('scale').value).toFixed(2);reset()};reset();
+let p=0,t=0;function bars(){let c=$('bars').getContext('2d');c.clearRect(0,0,900,160);c.fillStyle='#187c90';c.fillRect(120,25,650*(1-p),35);c.fillStyle='#d88432';c.fillRect(120,85,650*p,35);c.fillStyle='#20343a';c.fillText('State 0',20,48);c.fillText('State 1',20,108);$('chainStats').textContent=`Step ${t}: P(0) = ${(1-p).toFixed(5)}, P(1) = ${p.toFixed(5)}. Target P(1) = 0.66667.`}$('transition').onclick=()=>{p=.2*(1-p)+.9*p;t++;bars()};$('chainReset').onclick=()=>{p=0;t=0;bars()};bars();}
+</script></body>
+</html>
