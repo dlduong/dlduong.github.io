@@ -52,6 +52,10 @@ h1, h2 { font-weight: 500; line-height: 1.35; color: #282828; }
 h1 { font-size: 26px; margin: 0 0 20px; }
 h2 { font-size: 21px; margin: 31px 0 13px; }
 p { margin: 0 0 17px; }
+h3 { font-size: 17px; font-weight: 500; margin: 22px 0 8px; }
+.resource-detail { font-size: 14px; color: var(--muted); }
+.resource-list { padding-left: 22px; margin: 0 0 18px; }
+.resource-list li { margin-bottom: 4px; }
 .interests { padding-left: 22px; margin: 0 0 18px; }
 .interests li { padding-left: 2px; margin-bottom: 4px; }
 .publications { padding-left: 22px; margin: 0; }

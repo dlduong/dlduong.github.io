@@ -2,19 +2,21 @@
 
 Public site: **https://dlduong.github.io/**
 
-A simple, static academic website with a homepage and separate publications page. It uses HTML and CSS with no framework, package dependencies, analytics, external fonts, or JavaScript on the homepage. The MCMC tutorial is preserved from the original `dlduong/personalsite` repository, including its standalone interactive lab and Python examples.
+A simple, static academic website with a homepage, publications page, and notes and code page. It uses HTML and CSS with no framework, package dependencies, analytics, external fonts, or JavaScript on the homepage. The MCMC tutorial is preserved from the original `dlduong/personalsite` repository, including its standalone interactive lab and Python examples.
 
 ## Updating the site
 
 Edit `index.html` directly on GitHub (pencil icon), then commit to `main`. GitHub Pages automatically publishes changes, usually within a few minutes.
 
 - **Biography and research:** edit the main content in `index.html`. Keep the description and Person structured data in the document head consistent.
-- **Affiliation, contact and profile links:** edit the shared profile sidebar in both `index.html` and `publications.html`.
+- **Affiliation, contact and profile links:** edit the shared profile sidebar in `index.html`, `publications.html`, and `notes.html`.
 - **Publications:** edit `publications.html`. Add an `<li>` under the appropriate year. Preserve titles, author order, venue, publication status, and paper links. The list is selected work; Google Scholar links to the broader record.
 - **Portrait:** replace `assets/portrait.jpg`. Update the image description if needed.
 - **Design:** edit `assets/basic.css`. Color and font settings are at the top.
-- **New resources:** add files or a folder and link to them from the Resources section. Add substantial pages to `sitemap.xml`.
-- **CV:** when a current PDF is available, add `assets/duc-lam-duong-cv.pdf` and a link in the profile sidebar on both pages. No placeholder CV is published.
+- **Notes and code:** edit `notes.html`. Add each new set of material as a section with a descriptive heading, short description, and download links; store its files in a subfolder of `notes/`. Link substantial standalone pages from `sitemap.xml`. The homepage provides a short link to this collection.
+- **PDE files:** the supplied lecture notes and six 2025 worksheets are in `notes/pdes/`; the ZIP there contains only these seven PDFs. Rebuild the ZIP if replacing individual files.
+- **Software notes:** `notes/ode-pde-software-2021.pdf`, by Duc-Lam Duong and Anotida Madzvamuse (Spring 2021). PDFs are published unchanged; archive metadata files are excluded.
+- **CV:** when a current PDF is available, add `assets/duc-lam-duong-cv.pdf` and a link in the profile sidebar on all three pages. No placeholder CV is published.
 
 The homepage works without JavaScript and is usable offline with its local assets. The tutorial uses its own JavaScript. Navigation, publication links, email, and downloads are native HTML links. External scholarly sites may impose their own access restrictions.
 
