@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adjoint Operators in Inverse Problems — Duc-Lam Duong</title>
+<meta name="description" content="A 90-minute crash course on Hilbert-space adjoints, tomography, and PDE-constrained inverse problems, with three interactive labs and worked exercises.">
+<meta name="theme-color" content="#0f2731">
+<link rel="canonical" href="https://dlduong.github.io/adjoints/">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="course.css">
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
+<script defer src="labs.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to course</a>
+<header class="masthead">
+  <div class="wrap site-nav">
+    <a href="../">Duc-Lam Duong</a>
+    <nav aria-label="Site navigation"><a href="../notes.html">Notes &amp; code</a><a href="../mcmc/">MCMC course</a></nav>
+  </div>
+  <div class="wrap hero">
+    <div>
+      <p class="eyebrow">Inverse problems · Crash course</p>
+      <h1>Adjoint operators<br>in inverse problems</h1>
+      <p class="lede">How a residual in data space becomes a gradient in parameter space, from weighted matrices to tomography and PDEs.</p>
+      <div class="hero-actions"><a class="button" href="#foundations">Start the course <span aria-hidden="true">↓</span></a><a class="quiet" href="#practice">Go to the labs</a></div>
+      <p class="duration">90-minute core · 30-minute extension · No installation</p>
+    </div>
+    <figure class="pairing-figure" aria-label="Forward map from parameter space to data space and adjoint from data space back to parameter space">
+      <div class="pairing-labels"><span>Parameter space</span><span>Data space</span></div>
+      <div class="pairing-row"><b><i>h</i></b><span class="arrow"><em>A</em><span aria-hidden="true">⟶</span></span><b><i>Ah</i></b></div>
+      <div class="pairing-row reverse"><b><i>A</i><sup>∗</sup><i>r</i></b><span class="arrow"><em>A<sup>∗</sup></em><span aria-hidden="true">⟵</span></span><b><i>r</i></b></div>
+      <figcaption>〈<i>Ah</i>, <i>r</i>〉<sub>Y</sub> = 〈<i>h</i>, <i>A</i><sup>∗</sup><i>r</i>〉<sub>X</sub></figcaption>
+    </figure>
+  </div>
+</header>
+<main class="wrap course-layout" id="main">
+  <aside class="contents">
+    <nav aria-label="Course outline">
+      <a href="#foundations"><small>00–18 min</small> Hilbert-space foundations</a>
+      <a href="#gradients"><small>18–36 min</small> Least squares and regularization</a>
+      <a href="#tomography"><small>36–59 min</small> X-ray transforms and John’s equation</a>
+      <a href="#pde"><small>59–90 min</small> The adjoint-state method</a>
+      <a href="#practice"><small>90–120 min</small> Labs and extensions</a>
+      <a href="#references">References</a>
+    </nav>
+  </aside>
+  <div class="reading">
+  <p class="orientation">The course assumes familiarity with functional analysis, PDEs, and inverse problems. Work through the examples and short checks in order, then use the three labs to test the formulas. In the core course, inner products are real unless stated otherwise.</p>
+  <section id="foundations">
+    <p class="eyebrow timing">00–18 min</p>
+    <h2>Hilbert-space foundations</h2>
+    <h3>1. Pull back a data-space test</h3>
+    <p>Let \(h\) be a parameter perturbation and \(Ah\) the corresponding data perturbation. A data-space vector \(r\) defines the scalar test \(y\mapsto\langle y,r\rangle_Y\). Composing with \(A\) gives a test on parameter perturbations. Its representing vector in \(X\) is \(A^*r\).</p>
+    <div class="equation">\[\langle Ah,r\rangle_Y=\langle h,A^*r\rangle_X.\]</div>
+    <p><strong>Worked example.</strong> If the only reading is \(Ah=h_1+2h_2\), then the data test is \((h_1+2h_2)r\). Its Euclidean representing vector is \((r,2r)\). In an inverse problem, this tells you exactly how one residual contributes to the derivative with respect to both parameters.</p>
+    <h3>2. Geometry of the adjoint</h3>
+    <p>A data vector perpendicular to every achievable data perturbation is invisible to backpropagation. Conversely, a parameter perturbation in \(\ker A\) pairs to zero with every adjoint image.</p>
+    <div class="equation">\[\ker A^*=(\operatorname{ran} A)^\perp,\qquad \overline{\operatorname{ran} A^*}=(\ker A)^\perp.\]</div>
+    <p>The first equality follows by testing \(\langle Ah,r\rangle_Y\) for every \(h\). The second follows by applying the same argument to \(A^*\) and taking orthogonal complements. The closure allows for nonclosed range in infinite dimensions.</p>
+    <p><strong>Worked example.</strong> For \(Ah=(h_1+h_2,0)\), \(A^*(r_1,r_2)=(r_1,r_1)\). The residual \((0,1)\) contributes nothing to the derivative, and the perturbation \((1,-1)\) cannot be detected. In imaging, the same identities distinguish data components outside the closure of the range from invisible object perturbations.</p>
+    <h3>3. Existence and uniqueness from Riesz representation</h3>
+    <p>For bounded \(A:X\to Y\) and a fixed \(r\in Y\), the functional \(h\mapsto\langle Ah,r\rangle_Y\) is bounded by \(\|A\|\|h\|_X\|r\|_Y\). Riesz representation gives a unique \(A^*r\), and \(\|A^*\|=\|A\|\) follows by taking the supremum of \(|\langle Ah,r\rangle_Y|\) over unit \(h,r\).</p>
+    <p><strong>Worked example.</strong> For the inclusion \(i:H_0^1(0,1)\to L^2(0,1)\), equip \(H_0^1\) with \(\langle u,v\rangle=\int u'v'\). The representative \(z=i^*r\) satisfies \(\int h' z'=\int hr\), so \(z\) solves \(-z''=r\) with zero boundary values. For \(r=1\), \(z=x(1-x)/2\). This same Riesz solve converts a parameter derivative into a Sobolev gradient.</p>
+    <h3>4. Weighted matrices and complex data</h3>
+    <p>Moving a matrix across the pairing means moving its transpose and both inner-product matrices. With positive definite \(M_X,M_Y\),</p>
+    <div class="equation">\[(Ah)^\top M_Yr=h^\top M_X(A^*r)
+      \quad\Longrightarrow\quad A^*=M_X^{-1}A^\top M_Y.\]</div>
+    <p><strong>Worked example.</strong> Take \(A=\begin{pmatrix}1&amp;2\\0&amp;1\end{pmatrix}\), \(M_X=\operatorname{diag}(2,1)\), and \(M_Y=\operatorname{diag}(3,1)\). Then \(A^*=\begin{pmatrix}3/2&amp;0\\6&amp;1\end{pmatrix}\). For \(h=(1,1)\), \(r=(1,-1)\), both pairings equal \(8\). With complex vectors and Hermitian weights, replace \(A^\top\) by the conjugate transpose \(A^{\mathrm H}\). For a real-valued misfit on a complex space, take the real part of the pairing in the derivative.</p>
+    <p>In finite elements, \(M_X\) may be a mass or stiffness matrix. In finite data, \(M_Y\) may encode a quadrature rule or a chosen noise metric. Keep track of which pairing the code represents.</p>
+    <details><summary>Check your reasoning</summary><p>With \(A=[1\ \ 2]\), \(M_X=\operatorname{diag}(4,1)\) and \(M_Y=1\), what is \(A^*1\)? It is \((1/4,2)\). Verify by pairing against arbitrary \(h\).</p></details>
+  </section>
+  <section id="gradients">
+    <p class="eyebrow timing">18–36 min</p>
+    <h2>Least squares and regularization</h2>
+    <h3>5. Integral operators and differential domains</h3>
+    <p>For a square-integrable kernel \(k\) on \(D\times\Omega\), let \(Au(y)=\int_\Omega k(y,x)u(x)\,dx\). Fubini’s theorem gives \(A^*r(x)=\int_D k(y,x)r(y)\,dy\) in the real case. If \(k(y,x)=yx\) on the unit square and \(r(y)=1\), then \(A^*r(x)=x/2\). For a measurement \(Cu=(\int q_j u)_j\), the same calculation gives the adjoint load \(C^*r=\sum_j r_j q_j\).</p>
+    <p>For an unbounded, densely defined \(A:D(A)\subset X\to Y\), the adjoint domain consists of those \(r\) for which \(h\mapsto\langle Ah,r\rangle_Y\) is bounded in the \(X\)-norm. For \(Du=u'\) on \(L^2(0,1)\) with domain \(H^1(0,1)\), integration by parts gives \(D^*v=-v'\) with domain \(H_0^1(0,1)\). Compactly supported tests first force \(v\in H^1\). The freedom to vary both endpoint values of \(u\) then forces \(v(0)=v(1)=0\). For \(v=x(1-x)\) the adjoint image is \(2x-1\). This is why an adjoint PDE calculation starts with the domain and boundary terms.</p>
+    <h3>6. A residual becomes a parameter derivative</h3>
+    <p>For a differentiable forward map \(F\) and data \(d\in\mathbb R^q\) with positive definite noise covariance \(\Gamma\), set \(r=F(m)-d\). Use the Euclidean data pairing for \(DF(m)^*\) and write the noise precision explicitly.</p>
+    <div class="equation">\[\Phi(m)=\tfrac12r^\top\Gamma^{-1}r,\quad
+      D\Phi(m)[h]=\langle DF(m)h,\Gamma^{-1}r\rangle,\quad
+      \nabla_X\Phi(m)=DF(m)^*\Gamma^{-1}r.\]</div>
+    <p>If the data inner product already uses \(\Gamma^{-1}\), apply that metric adjoint directly to \(r\). For \(F(m)=m^2\), \(m=2\), \(d=3\), \(\Gamma=4\), the Euclidean gradient is \(4(4-3)/4=1\). The same chain rule drives MAP optimization and gradient-based sampling in finite coordinates.</p>
+    <h3>7. Normal equations and what they reveal</h3>
+    <p>For \(\Phi_\alpha(u)=\tfrac12\|Au-d\|_Y^2+\tfrac\alpha2\|u-u_0\|_X^2\), a stationary point satisfies</p>
+    <div class="equation">\[(A^*A+\alpha I)u=A^*d+\alpha u_0,\qquad
+      \langle h,A^*Ah\rangle_X=\|Ah\|_Y^2.\]</div>
+    <p>With \(\alpha=0\), the residual at any least-squares minimizer is orthogonal to the range. With \(\alpha&gt;0\), the operator on the left is coercive. For \(A=\operatorname{diag}(1,0.01)\), \(u_0=0\), \(d=(1,0.01)\), the exact fit is \((1,1)\). Choosing \(\alpha=0.01\) gives \((0.9901,0.0099)\). In singular coordinates the data multiplier is \(\sigma/(\sigma^2+\alpha)\), so small singular values no longer amplify data by \(1/\sigma\).</p>
+    <p>For Gaussian data, \(DF(m)^*\Gamma^{-1}DF(m)\) is the data part of the Gauss–Newton Hessian. Its quadratic form measures linearized sensitivity in a given direction. Prior precision adds a separate term in finite-dimensional Gaussian MAP calculations.</p>
+    <details><summary>Check your reasoning</summary><p>Why does solving the unregularized problem through the normal equations worsen conditioning? For a full-column-rank Euclidean matrix, the eigenvalues of \(A^\top A\) are the squared singular values, so its spectral condition number is \(\kappa_2(A)^2\). QR or SVD avoids explicitly forming that matrix.</p></details>
+  </section>
+  <section id="tomography">
+    <p class="eyebrow timing">36–59 min</p>
+    <h2>X-ray transforms and John’s equation</h2>
+    <h3>8. The adjoint is backprojection</h3>
+    <p>Forward projection collects the object along a line. At a given object point, backprojection collects the values of all lines through that point.</p>
+    <p>In \(\mathbb R^3\), let \(\theta\in S^2\) be the unit direction and \(p\in\theta^\perp\) the closest point of the line to the origin. Use Lebesgue measure \(dp\) in \(\theta^\perp\) and surface area \(dS(\theta)\) on the full sphere. For an object on a bounded region, extend it by zero and write</p>
+    <div class="equation">\[Xf(p,\theta)=\int_\mathbb R f(p+t\theta)\,dt,\qquad
+    X^*g(x)=\int_{S^2}g\big(x-(x\cdot\theta)\theta,\theta\big)\,dS(\theta).\]</div>
+    <p>The identity follows by inserting the first formula into the data pairing and changing variables \(x=p+t\theta\) for each \(\theta\). The Jacobian is one because the offset plane and line direction are orthogonal. The full sphere counts both orientations. Using a hemisphere changes the normalization on even line data.</p>
+    <p>In two dimensions use the line normal \(\nu_\varphi=(\cos\varphi,\sin\varphi)\) with \(\varphi\in[0,\pi)\). The planar Radon transform integrates over \(x\cdot\nu_\varphi=s\), and \(R^*g(x)=\int_0^\pi g(\varphi,x\cdot\nu_\varphi)\,d\varphi\) for the flat \(ds\,d\varphi\) pairing. In three dimensions the hyperplane Radon transform instead integrates over planes.</p>
+    <p><strong>Worked example.</strong> The line integrals of the indicator of a disk of radius \(a\) centered at \(c\) are its chord lengths \(2\sqrt{a^2-(s-c\cdot\nu_\varphi)^2}\) when \(|s-c\cdot\nu_\varphi|&lt;a\), and zero otherwise. A single angle sends those values back along parallel lines. The <a href="#backprojection-lab">backprojection lab</a> shows what happens as more angles contribute.</p>
+    <p>To see why filtering enters inversion, insert \(g=Xf\) in the adjoint and change to polar coordinates in the displacement \(y-x=t\theta\).</p>
+    <div class="equation">\[X^*Xf(x)=2\int_{\mathbb R^3}|x-y|^{-2}f(y)\,dy.\]</div>
+    <p>For the full-space transform on smooth compactly supported objects this has a Fourier multiplier proportional to \(|\xi|^{-1}\). Inverting the normal operator applies a multiplier proportional to \(|\xi|\), which explains the role of filtering and why noise matters. Algebraic reconstruction instead applies the adjoint repeatedly to data residuals, using a matched discrete transpose.</p>
+    <h3>9. John’s equation tests consistency in line space</h3>
+    <p>Three-dimensional line data depend on four variables. John’s equation shows how the line integral links changes to the line’s offset and slope.</p>
+    <div class="equation">\[
+    Tf(a,b)=\int_{\mathbb R} f(a+tb,t)\,dt,\qquad J=\partial_{a_1}\partial_{b_2}-\partial_{a_2}\partial_{b_1}.
+    \]</div>
+    <p>Here \(a,b\in\mathbb R^2\), \(a\) is the intercept at height zero, and \(b\) the slope. In the two terms of \(J Tf\), differentiating inside the integral gives the same integrand \(t\,\partial_{x_1}\partial_{x_2}f(a+tb,t)\). Thus \(JTf=0\). The arclength data in this chart are \(g=\sqrt{1+|b|^2}\,Tf\), so the consistency equation is \(J(g/\sqrt{1+|b|^2})=0\).</p>
+    <p><strong>Worked example.</strong> Let \(f(x_1,x_2,t)=e^{-x_1^2-x_2^2}\eta(t)\) with \(\eta(t)=e^{-(t-1)^2}/\sqrt\pi\). Since \(\int t\eta(t)\,dt=1\), both mixed derivatives of \(Tf\) at \(a=(1,1),b=0\) equal \(4e^{-2}\). A proposed data patch \(u=a_1b_2\) instead gives \(Ju=1\). Its derivatives are incompatible with a common object on that patch.</p>
+    <p>Twice integrating by parts gives \(J^*=J\) formally for flat \(da\,db\) and compact tests. For a positive smooth density \(w\), \(J_w^*v=w^{-1}J(wv)\). If \(S\) multiplies by \(\sqrt{1+|b|^2}\), the operator on arclength data is \(JS^{-1}\), whose flat formal adjoint is \(S^{-1}J\). In the normalized chart \(JT=0\) implies \(T^*J^*v=0\) on compact tests under the corresponding pairings. This connects consistency residuals to the orthogonal complement of attainable line data.</p>
+    <p>Use the equation to test or constrain data on a line-space patch. Global range statements require appropriate function spaces and conditions across charts. With restricted scan geometry, verify which derivatives the acquired data support before using the PDE.</p>
+    <details><summary>Check your reasoning</summary><p>Suppose \(g=S Tf\). Expand \(Jg\) using the product rule. The surviving terms are \((\partial_{b_2}S)\partial_{a_1}Tf-(\partial_{b_1}S)\partial_{a_2}Tf\), so the arclength factor affects the PDE even though it depends only on slope.</p></details>
+  </section>
+  <section id="pde">
+    <p class="eyebrow timing">59–90 min</p>
+    <h2>The adjoint-state method</h2>
+    <h3>10. Eliminate the state sensitivity from the derivative</h3>
+    <p>Let the state \(u(m)\) solve \(E(u,m)=0\) in a residual space \(Z\), and let \(\widehat\Phi(m)=\Phi(u(m),m)\). Assume the relevant maps are differentiable and \(E_u:V\to Z\) is boundedly invertible at the state. The tangent state \(\dot u\) solves \(E_u\dot u=-E_mh\), which depends on the parameter direction \(h\). For a scalar objective, the same adjoint state can serve every direction.</p>
+    <div class="equation">\[E_u' p=\Phi_u,\qquad
+    D\widehat\Phi(m)[h]=\Phi_m[h]-\langle p,E_m h\rangle_{Z',Z}.\]</div>
+    <p>The prime on \(E_u'\) denotes the dual transpose, and \(\Phi_u\in V'\) is a derivative functional. Since \(\Phi_u[\dot u]=\langle p,E_u\dot u\rangle\), substituting the tangent equation gives the negative sign. Equivalently use the Lagrangian \(\Phi-\langle p,E\rangle\), with the same convention throughout.</p>
+    <p><strong>Worked example.</strong> Take \(E(u,m)=m u-1\), \(\Phi=\frac12(u-d)^2\), and \(m&gt;0\). The adjoint satisfies \(mp=u-d\), and the reduced derivative is \(-pu\). Differentiating \(u=1/m\) directly gives the same answer. In a discretized PDE with one state and one scalar objective, the adjoint similarly costs one additional linear solve after the forward state; assembling the parameter derivative still has its own cost.</p>
+    <h3>11. Recover a log-diffusivity from observations</h3>
+    <p>Let \(\Omega\) be a bounded Lipschitz domain, \(V=H_0^1(\Omega)\), \(m\in L^\infty(\Omega)\), and \(a=e^m\). Set \(a_m(u,v)=\int_\Omega e^m\nabla u\cdot\nabla v\,dx\). With \(f\in V'\), the state solves \(a_m(u,v)=f[v]\) for all \(v\in V\). Let \(C:V\to\mathbb R^q\) be a bounded observation map, for example averages over subregions. The misfit is \(\frac12\|Cu-d\|_{\Gamma^{-1}}^2\).</p>
+    <ol class="derivation">
+      <li><strong>Solve the state.</strong> In strong notation it solves \(-\nabla\cdot(e^m\nabla u)=f\) with homogeneous Dirichlet data.</li>
+      <li><strong>Differentiate the weak form.</strong> The tangent equation is
+      <div class="equation">\[a_m(\dot u,v)=-\int_\Omega e^m h\,\nabla u\cdot\nabla v\,dx.\]</div></li>
+      <li><strong>Solve the adjoint.</strong> Put \(z=\Gamma^{-1}(Cu-d)\) and solve for \(p\in V\) from \(a_m(v,p)=z^\top Cv\) for all \(v\in V\). Equivalently \(-\nabla\cdot(e^m\nabla p)=C'z\) in \(V'\) with zero trace. The adjoint source is the data residual pulled back through the sensors.</li>
+      <li><strong>Form the derivative.</strong> Test the tangent equation with \(p\) and the adjoint equation with \(\dot u\) to obtain
+      <div class="equation">\[D\widehat\Phi(m)[h]=z^\top C\dot u=-\int_\Omega e^m(\nabla u\cdot\nabla p)\,h\,dx.\]</div></li>
+    </ol>
+    <p>The displayed density belongs to \(L^1\) under the stated assumptions and acts on \(L^\infty\) directions. An \(L^2\) gradient requires the density to lie in \(L^2\), or a discrete parameter space where the Riesz representative exists in the chosen metric. Add any regularizer’s derivative before applying the parameter-space Riesz map.</p>
+    <p><strong>Worked example.</strong> On \((0,1)\), take \(m=0\), \(f=1\), \(Cu=\int_0^1u\), \(d=0\), and \(\Gamma=1\). Then \(u=x(1-x)/2\), \(Cu=1/12\), and \(p=u/12\). For the constant direction \(h=1\), the formula gives \(-1/144\). Direct differentiation of \(\widehat\Phi(m)=e^{-2m}/288\) for constant \(m\) gives the same value.</p>
+    <p>For a time-dependent worked variant and a discrete coefficient gradient check, see the <a href="#pde-lab">PDE lab</a> and <a href="#extensions">extensions</a>.</p>
+    <h3>12. Diagnose an adjoint calculation</h3>
+    <p>A dot-product test checks whether the implemented backpropagation is the adjoint of the implemented linear map or Jacobian. A Taylor test checks whether a candidate derivative belongs to the actual nonlinear objective.</p>
+    <div class="equation">\[
+    \langle Ah,r\rangle_Y-\langle h,A^*r\rangle_X,\qquad
+    \left|\widehat\Phi(m+\varepsilon h)-\widehat\Phi(m)-\varepsilon D\widehat\Phi(m)[h]\right|.
+    \]</div>
+    <p><strong>Worked example.</strong> For \(\widehat\Phi(m)=m^2/2\) at \(m=1\) in direction \(h=1\), the correct derivative gives a remainder \(\varepsilon^2/2\). Reversing the derivative sign gives \(2\varepsilon+\varepsilon^2/2\). When halving \(\varepsilon\), the former falls by a factor of four and the latter by a factor approaching two.</p>
+    <dl class="diagnostics">
+      <dt>Dot-product mismatch</dt><dd>Check the mass matrices, complex conjugation, interpolation and its scatter transpose, and boundary or time-step contributions.</dd>
+      <dt>Dot-product agreement but first-order Taylor decay</dt><dd>Check the linearization, residual sign, noise weighting, or a missing derivative term. The dot-product test also passes for a matched pair built from the wrong Jacobian.</dd>
+      <dt>Correct Taylor decay followed by a plateau</dt><dd>Try intermediate step sizes and tighten solver tolerances. At tiny steps, cancellation and solver error can dominate.</dd>
+      <dt>Adjoint image looks like a blurred reconstruction</dt><dd>Compare \(A^*d\) with a regularized solve or a filtered backprojection, and inspect the spectrum of \(A^*A\).</dd>
+    </dl>
+    <details><summary>Check your reasoning</summary><p>Why apply \(M_X^{-1}\) after computing a coordinate derivative? The entries of the coordinate derivative give a functional \(h\mapsto c^\top h\). The gradient \(g\) is its representing vector in the chosen metric, so \(M_Xg=c\).</p></details>
+  </section>
+  <section id="practice">
+    <p class="eyebrow timing">90–120 min · Optional</p>
+    <h2>Try the adjoints yourself</h2>
+    <p>Spend about ten minutes at each station, including the exercise under the controls. Simulations run locally in your browser.</p>
+    <noscript><p>Enable JavaScript for the interactive controls and equation rendering. The written examples and solutions are still available below.</p></noscript>
+    <article class="lab" id="matrix-lab">
+      <h3>Weighted dot-product test</h3>
+      <p>The lab uses \(A=\left(\begin{smallmatrix}1&amp;2\\0&amp;1\end{smallmatrix}\right)\), \(h=(1,1)\), \(r=(1,-1)\), \(M_X=\operatorname{diag}(w_X,1)\) and \(M_Y=\operatorname{diag}(w_Y,1)\). Change the weights while comparing the two candidate adjoints.</p>
+      <div class="controls">
+        <label>Parameter weight \(w_X\) <input id="weight-x" type="range" min="0.5" max="6" step="0.5" value="2"></label>
+        <label>Data weight \(w_Y\) <input id="weight-y" type="range" min="0.5" max="6" step="0.5" value="3"></label>
+        <label>Candidate <select id="matrix-mode"><option value="weighted">Metric adjoint</option><option value="transpose">Plain transpose</option></select></label>
+      </div>
+      <output id="matrix-result" aria-live="polite"></output>
+      <details><summary>Exercise and solution</summary><p>Find weights for which the plain transpose passes this single test. The two pairings are \(3w_Y-1\) and \(w_X+1\), so any \(w_X=3w_Y-2\) in the slider range works. For example \(w_Y=2\) and \(w_X=4\). Try multiple test vectors when validating your own operator.</p></details>
+    </article>
+    <article class="lab" id="backprojection-lab">
+      <h3>Backproject the chord data of a disk</h3>
+      <p>Move the blue disk and vary the number of views. The simulation uses exact chord lengths and angular quadrature. Backprojection adds the contributions from the measured angles.</p>
+      <div class="controls">
+        <label>Views <select id="view-count"><option>1</option><option>3</option><option selected>8</option><option>24</option><option>90</option></select></label>
+        <label>Disk centre \(x_1\) <input id="disk-x" type="range" min="-0.5" max="0.5" step="0.05" value="0.25"></label>
+        <label>Disk centre \(x_2\) <input id="disk-y" type="range" min="-0.5" max="0.5" step="0.05" value="-0.2"></label>
+      </div>
+      <div class="image-pair">
+        <figure><canvas id="object-image" width="240" height="240" role="img" aria-label="Disk phantom and central line for the first measured view"></canvas><figcaption>Object and first view</figcaption></figure>
+        <figure><canvas id="back-image" width="240" height="240" role="img" aria-label="Unfiltered backprojection, shown with a fixed intensity scale"></canvas><figcaption>Unfiltered backprojection</figcaption></figure>
+      </div>
+      <output id="back-result" aria-live="polite"></output>
+      <details><summary>Exercise and solution</summary><p>At one view with normal \((1,0)\), every point with the same \(x_1\) has the same backprojection. At 90 views the bright region localizes around the disk, with a halo outside it. Some lines through a point outside the disk still intersect the disk, so their positive contributions create the halo.</p></details>
+    </article>
+    <article class="lab" id="pde-lab">
+      <h3>Check a discrete log-diffusivity gradient</h3>
+      <p>Solve the 1D model on 48 equal elements with piecewise linear states and piecewise constant \(m\). The load is \(f=1\), \(Cu=\int u\), \(d=0.11\), and \(\Gamma=1\). The table recomputes the forward solve at each perturbation and estimates the Taylor slope.</p>
+      <div class="controls">
+        <label>Starting step <select id="step"><option value="0.25">0.25</option><option value="0.05" selected>0.05</option><option value="0.005">0.005</option></select></label>
+        <label>Direction <select id="direction"><option value="smooth">Smooth spatial perturbation</option><option value="constant">Constant perturbation</option></select></label>
+        <label>Candidate <select id="gradient-mode"><option value="correct">Adjoint derivative</option><option value="flipped">Reverse its sign</option></select></label>
+      </div>
+      <output id="pde-result" aria-live="polite"></output>
+      <div class="table-scroll"><table><caption>Taylor remainders at successive step sizes</caption>
+        <thead><tr><th scope="col">Step</th><th scope="col">Raw change</th><th scope="col">Corrected change</th><th scope="col">Observed order</th></tr></thead><tbody id="taylor-rows"></tbody>
+      </table></div>
+      <details><summary>Exercise and solution</summary><p>For an element \(e=[x_i,x_{i+1}]\) of length \(\Delta x\), assembly gives the derivative component \(-e^{m_e}(u_{i+1}-u_i)(p_{i+1}-p_i)/\Delta x\). Dot these components with the element perturbation. If you want the piecewise constant \(L^2\) gradient itself, divide each component by its element length. Compare the slopes after reversing the sign.</p></details>
+    </article>
+    <div id="extensions">
+      <h3>Two extensions for further study</h3>
+      <details><summary>Why a heat adjoint runs backward in time</summary>
+        <p>For \(u_t-\Delta u=0\) with \(u(0)=m\) and homogeneous Dirichlet boundary data, use a terminal misfit \(\frac12\|Cu(T)-d\|_{\Gamma^{-1}}^2\) with bounded \(C:L^2(\Omega)\to\mathbb R^q\). Choose \(p(T)=C^*\Gamma^{-1}(Cu(T)-d)\) and solve \(-p_t-\Delta p=0\) with zero boundary data. Integrating \(\int p(\dot u_t-\Delta\dot u)\) by parts leaves the endpoint identity \(\langle p(T),\dot u(T)\rangle=\langle p(0),h\rangle\). The initial-state gradient is \(p(0)\). In reverse time \(s=T-t\), the equation is forward diffusion. With distributed observations, their derivative adds a source on the right of the adjoint PDE.</p>
+        <p>For a Dirichlet Laplacian eigenmode with \(-\Delta\phi=\lambda\phi\), a terminal adjoint amplitude is multiplied by \(e^{-\lambda T}\) at \(t=0\). This shows how smoothing limits sensitivity to high-frequency initial conditions.</p>
+      </details>
+      <details><summary>Apply Gauss–Newton without assembling a Hessian</summary>
+        <p>For \(F(m)=Cu(m)\), first apply \(DF(m)\) to a direction \(h\) using the tangent equation. Weight the output by \(\Gamma^{-1}\) and use it as the data input to an adjoint solve. Pair the resulting adjoint field with the coefficient derivative. This computes \(DF(m)^*\Gamma^{-1}DF(m)h\) using one tangent and one adjoint solve at a fixed state. The exact misfit Hessian additionally contains \(\langle\Gamma^{-1}r,D^2F(m)[h,k]\rangle\) in directions \(h,k\), and this term vanishes at zero residual.</p>
+      </details>
+    </div>
+  </section>
+  <section id="references">
+    <h2>References</h2>
+    <ol class="references">
+      <li>S. Boyd and L. Vandenberghe (2018), <a href="https://stanford.edu/~boyd/vmls/">Introduction to Applied Linear Algebra</a>. Matrix least squares and regularized inversion.</li>
+      <li>A. M. Stuart (2010), <a href="https://doi.org/10.1017/S0962492910000061">Inverse problems: A Bayesian perspective</a>. Function-space formulation and statistical regularization.</li>
+      <li>A. C. Kak and M. Slaney (2001), <a href="https://www.slaney.org/pct/pct-toc.html">Principles of Computerized Tomographic Imaging</a>, Chapter 3. Fourier slice theorem and filtered backprojection.</li>
+      <li>J. Ilmavirta and K. Mönkkönen (2022), <a href="https://doi.org/10.1007/s00041-022-09907-9">Partial Data Problems and Unique Continuation in Scalar and Vector Field Tomography</a>, §2.2. Line measures, backprojection, and the X-ray normal operator.</li>
+      <li>F. John (1938), <a href="https://doi.org/10.1215/S0012-7094-38-00423-5">The ultrahyperbolic differential equation with four independent variables</a>. Original range analysis in three dimensions. See also <a href="https://maths-people.anu.edu.au/~eastwood/srni14_1.pdf">M. Eastwood’s notes</a> for the offset–slope form.</li>
+      <li>R.-E. Plessix (2006), <a href="https://doi.org/10.1111/j.1365-246X.2006.02978.x">A review of the adjoint-state method for computing the gradient of a functional with geophysical applications</a>. General derivation and examples.</li>
+      <li>U. Villa, N. Petra, and O. Ghattas (2021), <a href="https://doi.org/10.1145/3428447">hIPPYlib, Part I: Deterministic Inversion and Linearized Bayesian Inference</a>. Scalable implementations for PDE inverse problems.</li>
+      <li>The dolfin-adjoint documentation, <a href="https://dolfin-adjoint.github.io/dolfin-adjoint/documentation/verification.html">Verification</a>. Taylor remainder test with numerical examples.</li>
+    </ol>
+  </section>
+  </div>
+</main>
+<footer class="wrap footer"><a href="../notes.html">← Notes &amp; code</a><a href="../mcmc/">Companion MCMC course →</a></footer>
+</body>
+</html>
